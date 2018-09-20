@@ -12,7 +12,7 @@ The microcontroller also implements a Modbus interface via it's UART1 interface.
 * Raspberry PI supporting Ethernet or WLAN access and high level programming
 * 1 Microcontroller (Atmgea324P) supporting Modbus RTU (or Modbus-ASCII) and real time programming
 * Measurment for temperature sensor inside boiler
-* 4-20mA interface for thyristor phase control circuit (electric heater control)
+* 4-20mA interface for thyristor phase control circuit (for example [Schäcke P0000113](https://www.schaecke.at/aus/Kategorien/Steuern-%26-Regeln/Sch%C3%BCtze-%26-Relais/Halbleiterrelais/Wallner-Automation-Leistungssteller-Thyristor-LS1-3%2C6-230V-40-A-4-20-mA-inkl-KK/p/4122046)) used for smart electric heater control
 * Additional sensor interfaces (flow sensor, ...)
 * For DIN-rail housing [Camdenboss CBRPP-DR-CLR](https://www.camdenboss.com/camden-boss/cbrpi-dr-2-3-clr-pi-b%2c-p2%2c-p3-din-rail-enclosure/c-23/p-16101)  
 (W x H x D = 88mm x 90mm x 58mm; 4.8 DIN rails units)
