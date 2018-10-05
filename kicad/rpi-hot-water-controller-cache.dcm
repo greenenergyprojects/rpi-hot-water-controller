@@ -1,0 +1,30 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP G3MB-202P
+D Solid State Relay (Photo MOSFET 5V, 0.1A), 230VAC/2A, SIP package
+K MOSFET SSR Photorelay SIP
+F http://www.alldatasheet.com/datasheet-pdf/pdf/107185/ETC/G3MB-202P.html
+$ENDCMP
+#
+$CMP HLK-5M05
+D 230V to 5V, 5W, LxWxH=38x23x18mm
+$ENDCMP
+#
+$CMP PRJ_Conn_01x03
+D Generic connector, single row, 01x03
+K connector
+F ~
+$ENDCMP
+#
+$CMP PRJ_LED_Bi-color_red-green
+D Bi-Color LED red/green, 4-pin
+K led diode bicolor dual
+$ENDCMP
+#
+$CMP PRJ_LM336M-2.5
+D Reference Diode 2.5V
+K reference diode 2.5V
+F http://www.ti.com/general/docs/lit/getliterature.tsp?genericPartNumber=lm336-2.5-n&fileType=pdf
+$ENDCMP
+#
+#End Doc Library
