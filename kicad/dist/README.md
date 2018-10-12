@@ -6,13 +6,22 @@ See [https://support.jlcpcb.com/article/44-how-to-export-kicad-pcb-to-gerber-fil
 
 # Bugs / Improvements
 
+Mechanical Drawings from Layer NP to PHT(PLATING Through Hole) (email request from support@jlcpcb.com on 2018-09-21)
+
 | Reference | Description |
 | --------- | ----------- |
+| D1, D10   | increase footprint  |
+|           | add LED for 5V supply |
+| D18       | add connector GND, D18-1, D18-2 (also for external supply)
+|           | add connector +3V3, GND (for external supply)
+| J1        | exchange silk screen text SCK -> 23
+| U8        | footprint fits HLK-PM01 3W, change footprint for HLK-5M05 (5W)
 | LEDs      | use resistor: red/560R, yellow/390R, green/680R?, blue/?
 
 ## Power supply
 
-Power supply via USB connector may be lead to unstability, when voltage drop on cable to high. Minimum voltage before diode D6 is 4.7V.
+Power supply via USB connector may be lead to unstability, when voltage drop on cable to high. Minimum voltage before diode D1/D10 is 4.7V.  
+Power supply via HLK-PM01 (3W, 5V/0.6A) on limit if Raspberry 3+ connected ( app. 0.5 to 0.6 amps on 5V supply).
 
 
 # Software
@@ -78,3 +87,5 @@ After reboot you can use `/dev/serial0` for serial communication between microco
 
 For more information:  
 [http://www.netzmafia.de/skripten/hardware/RasPi/RasPi_Serial.html](http://www.netzmafia.de/skripten/hardware/RasPi/RasPi_Serial.html)
+
+
