@@ -10,18 +10,17 @@ Mechanical Drawings from Layer NP to PHT(PLATING Through Hole) (email request fr
 
 | Reference | Description |
 | --------- | ----------- |
-| D1, D10   | increase footprint  |
-|           | add LED for 5V supply |
-| D18       | add connector GND, D18-1, D18-2 (also for external supply)
-|           | add connector +3V3, GND (for external supply)
-| J1        | exchange silk screen text SCK -> 23
-| U8        | footprint fits HLK-PM01 3W, change footprint for HLK-5M05 (5W)
-| LEDs      | use resistor: red/560R, yellow/390R, green/680R?, blue/?
+| B1 | Layout error, short cut +3V3 and GND, remove print on B3 mechanically | 
+| Q2, Q3, Q4, Q5  | schematic error, cannot work, must be located on GND side  |
+| R25   | 12K -> 15K to increase measurment resolution  |
+| U6A   | Voltage drop of LM358 (up to 2V) leads to limited measurement range, increase supply voltage or stay on internal VREF (1V) = U6B values |
+| R36   | 8K2 -> 56K (sensor signal has 2,4V, pin threshhold arround 1,5V), schottky to 3V3
+| R37   | 8K2 -> 56K (sensor signal has 2,4V, pin threshhold arround 1,5V), schottky to 3V3
+|       | add osci connectors for sensor signals
+|       | 5V -> 3,3V supply for 
 
 ## Power supply
 
-Power supply via USB connector may be lead to unstability, when voltage drop on cable to high. Minimum voltage before diode D1/D10 is 4.7V.  
-Power supply via HLK-PM01 (3W, 5V/0.6A) on limit if Raspberry 3+ connected ( app. 0.5 to 0.6 amps on 5V supply).
 
 
 # Software
