@@ -14,7 +14,10 @@
     "files.associations": {
         "global.h": "c",
         "stdio.h": "c",
-        "io.h": "c"
+        "io.h": "c",
+        "inttypes.h": "c",
+        "cinttypes": "c",
+        "stdint.h": "c"
     },
     "cpplint": {
         "lineLength": 140,

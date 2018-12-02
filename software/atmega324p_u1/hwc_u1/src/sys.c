@@ -10,31 +10,40 @@
 #include <util/delay.h>
 
 #include "./sys.h"
+#include "./modbus_ascii.h"
 #include "./app.h"
 
 // defines
 
 
-#define SYS_UART_BYTE_RECEIVED (UCSR0A & (1 << RXC0))
-#define SYS_UART_UDR_IS_EMPTY (UCSR0A & (1 << UDRE0))
-#define SYS_UDR UDR0
-#define SYS_UART_RECEIVE_VECTOR USART0_RX_vect
-#define SYS_TIMER0_VECTOR TIMER0_COMPA_vect
+#define SYS_UART0_BYTE_RECEIVED (UCSR0A & (1 << RXC0))
+#define SYS_UART0_UDR_IS_EMPTY (UCSR0A & (1 << UDRE0))
+#define SYS_UDR0 UDR0
+
+#define SYS_UART1_BYTE_RECEIVED (UCSR1A & (1 << RXC1))
+#define SYS_UART1_UDR_IS_EMPTY (UCSR1A & (1 << UDRE1))
+#define SYS_UDR1 UDR1
+// #define SYS_UART_RECEIVE_VECTOR USART0_RX_vect
+// #define SYS_TIMER0_VECTOR TIMER0_COMPA_vect
 
 // declarations and definations
 
-volatile struct Sys sys;
+struct Sys sys;
 
 // functions
 
-int sys_uart_putch (char c, FILE *f);
-int sys_uart_getch (FILE *f);
+int sys_uart0_putch (char c, FILE *f);
+int sys_uart1_putch (char c, FILE *f);
+int sys_uart0_getch (FILE *f);
 
-static FILE sys_stdout = FDEV_SETUP_STREAM(sys_uart_putch, NULL, _FDEV_SETUP_WRITE);
-static FILE sys_stdin = FDEV_SETUP_STREAM(NULL, sys_uart_getch, _FDEV_SETUP_READ);
+static FILE sys_stdin = FDEV_SETUP_STREAM(NULL, sys_uart0_getch, _FDEV_SETUP_READ);
+static FILE sys_stdout = FDEV_SETUP_STREAM(sys_uart0_putch, NULL, _FDEV_SETUP_WRITE);
+static FILE sys_fOutModbus = FDEV_SETUP_STREAM(sys_uart1_putch, NULL, _FDEV_SETUP_WRITE);
+
 
 void sys_init () {
     memset((void *)&sys, 0, sizeof(sys));
+    sys.version = 1;
     _delay_ms(1);
 
     // DDRA |= 0x07;  // Debug
@@ -50,9 +59,9 @@ void sys_init () {
     DDRC |= 0x3c;          // SSR4, SSR3, SSR2, SSR1
     DDRD |= 0x70;          // LEDs: PT1000-1-g, PT1000-1-r, LED Pwm-Green
 
-    TCCR2A = (1 << COM2A1) | (0 << COM2A0) | (1 << WGM21) | (1 << WGM20);
+    TCCR2A = (1 << COM2A1) | (1 << COM2A0) | (1 << WGM21) | (1 << WGM20);
     TCCR2B = (1 << CS20);
-    OCR2A = 0;
+    OCR2A = 0xff;
     DDRD |= (1 << PD7);    // PWM
 
     // PORTD |= (1 << PD7);
@@ -72,6 +81,10 @@ void sys_init () {
     // OCR1A  = 0xffff;
     // TIMSK1 = (1 << OCIE1A);
 
+    // ADC
+    ADMUX = (1 << REFS1) | (0 << REFS0) | (1 << ADLAR) | 0;
+    ADCSRA = (1 << ADEN) | 0x07;
+
     // UART0
     UBRR0L = (F_CPU/GLOBAL_UART0_BITRATE + 4)/8 - 1;
     UBRR0H = 0x00;
@@ -80,25 +93,18 @@ void sys_init () {
     UCSR0B = (1 << RXCIE0) | (1 << TXEN0) | (1 << RXEN0);
 
     // UART1
-    // UBRR1L = (F_CPU/GLOBAL_UART1_BITRATE + 4)/8 - 1;
-    // UBRR1H = 0x00;
-    // UCSR1A = (1 << U2X1);
-    // // UCSR1C = (1 << UPM11) | (1 << UCSZ11) | (1 << UCSZ10);
-    // UCSR1C = (1 << UCSZ11) | (1 << UCSZ10);
-    // UCSR1B = (1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1);
-    // sys.modbus[0].dT1_35 = 70 * 12000000L / 16 / GLOBAL_UART1_BITRATE;  // correct for even parity ?
-    // sys.modbus[0].dT1_15 = 30 * 12000000L / 16 / GLOBAL_UART1_BITRATE;  // correct for even parity ?
-    // OCR1A = sys.modbus[0].dT1_35;
-
-    // SPI Slave
-    // SPCR0 = (1 << SPIE0) | (1 << SPE0) | (1 << CPOL0);
-    // DDRB |= (1 << PB6); // MISO
+    UBRR1L = (F_CPU/GLOBAL_UART1_BITRATE + 4)/8 - 1;
+    UBRR1H = 0x00;
+    UCSR1A = (1 << U2X1);
+    UCSR1C = (1 << UCSZ11) | (1 << UCSZ10);
+    UCSR1B = (1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1);
 
     // connect libc functions printf(), gets()... to UART
     // fdevopen(sys_monitor_putch, sys_monitor_getch);
     stdout = &sys_stdout;
     stderr = &sys_stdout;
     stdin  = &sys_stdin;
+    sys.fOutModbus = &sys_fOutModbus;
 }
 
 
@@ -107,13 +113,17 @@ void sys_main (void) {
 
 //----------------------------------------------------------------------------
 
-uint8_t sys_inc8BitCnt (uint8_t count) {
-    return count < 0xff ? count + 1 : count;
+void sys_inc8BitCnt (uint8_t *count) {
+    if (*count < 0xff) {
+        (*count)++;
+    }
 }
 
 
-uint16_t sys_inc16BitCnt (uint16_t count) {
-    return count < 0xffff ? count + 1 : count;
+void sys_inc16BitCnt (uint16_t *count) {
+    if (*count < 0xffff) {
+        (*count)++;
+    }
 }
 
 
@@ -140,52 +150,62 @@ void sys_newline (void) {
 
 //----------------------------------------------------------------------------
 
-int sys_uart_getch (FILE *f) {
+int sys_uart0_getch (FILE *f) {
     if (f != stdin) {
         return EOF;
     }
-    if (sys.uart.wpos_u8 == sys.uart.rpos_u8) {
+    if (sys.uart0.txbuf.wpos_u8 == sys.uart0.txbuf.rpos_u8) {
         return EOF;
     }
-    uint8_t c = sys.uart.rbuffer_u8[sys.uart.rpos_u8++];
-    if (sys.uart.rpos_u8 >= GLOBAL_UART0_RECBUFSIZE) {
-        sys.uart.rpos_u8 = 0;
+    uint8_t c = sys.uart0.txbuf.buffer_u8[sys.uart0.txbuf.rpos_u8++];
+    if (sys.uart0.txbuf.rpos_u8 >= GLOBAL_UART0_RXBUFSIZE) {
+        sys.uart0.txbuf.rpos_u8 = 0;
     }
     return (int) c;
 }
 
 
-int sys_uart_putch (char c, FILE *f) {
+int sys_uart0_putch (char c, FILE *f) {
     if (f != stdout) {
         return EOF;
     }
-    while (!SYS_UART_UDR_IS_EMPTY) {
+    while (!SYS_UART0_UDR_IS_EMPTY) {
     }
-    SYS_UDR = c;
+    SYS_UDR0 = (uint8_t)c;
+    return (int)c;
+}
+
+int sys_uart1_putch (char c, FILE *f) {
+    if (f != &sys_fOutModbus) {
+        return EOF;
+    }
+    while (!SYS_UART1_UDR_IS_EMPTY) {
+    }
+    SYS_UDR1 = (uint8_t)c;
     return (int)c;
 }
 
 
-uint8_t sys_uart_available (void) {
-    return sys.uart.wpos_u8 >= sys.uart.rpos_u8
-             ? sys.uart.wpos_u8 - sys.uart.rpos_u8
-             : ((int16_t)sys.uart.wpos_u8) + GLOBAL_UART0_RECBUFSIZE - sys.uart.rpos_u8;
+uint8_t sys_uart0_available (void) {
+    return sys.uart0.txbuf.wpos_u8 >= sys.uart0.txbuf.rpos_u8
+             ? sys.uart0.txbuf.wpos_u8 - sys.uart0.txbuf.rpos_u8
+             : (uint8_t)( ((int16_t)sys.uart0.txbuf.wpos_u8) + GLOBAL_UART0_RXBUFSIZE - sys.uart0.txbuf.rpos_u8);
 }
 
 
 //----------------------------------------------------------------------------
 
-int16_t sys_uart_getBufferByte (uint8_t pos) {
+int16_t sys_uart0_getBufferByte (uint8_t pos) {
     int16_t value;
     sys_cli();
 
-    if (pos >= sys_uart_available()) {
+    if (pos >= sys_uart0_available()) {
         value = -1;
     } else {
-        uint8_t bufpos = sys.uart.rpos_u8 + pos;
-        if (bufpos >= GLOBAL_UART0_RECBUFSIZE)
-            bufpos -= GLOBAL_UART0_RECBUFSIZE;
-        value = sys.uart.rbuffer_u8[bufpos];
+        uint8_t bufpos = sys.uart0.txbuf.rpos_u8 + pos;
+        if (bufpos >= GLOBAL_UART0_RXBUFSIZE)
+            bufpos -= GLOBAL_UART0_RXBUFSIZE;
+        value = sys.uart0.txbuf.buffer_u8[bufpos];
     }
 
     sys_sei();
@@ -193,14 +213,14 @@ int16_t sys_uart_getBufferByte (uint8_t pos) {
 }
 
 
-void sys_uart_flush (void) {
+void sys_uart0_flush (void) {
     sys_cli();
-    while (SYS_UART_BYTE_RECEIVED)
-        sys.uart.rbuffer_u8[0] = SYS_UDR;
+    while (SYS_UART0_BYTE_RECEIVED)
+        sys.uart0.txbuf.buffer_u8[0] = SYS_UDR0;
 
-    sys.uart.rpos_u8 = 0;
-    sys.uart.wpos_u8 = 0;
-    sys.uart.errcnt_u8 = 0;
+    sys.uart0.txbuf.rpos_u8 = 0;
+    sys.uart0.txbuf.wpos_u8 = 0;
+    sys.uart0.errcnt_u8 = 0;
     sys_sei();
 }
 
@@ -287,6 +307,14 @@ uint8_t sys_isSensor2On () {
 
 
 //****************************************************************************
+// 4 to 20mA handling
+//****************************************************************************
+
+void sys_setPwm4To20mA (uint8_t value) {
+    OCR2A = 0xff - value;
+}
+
+//****************************************************************************
 // LED Handling
 //****************************************************************************
 
@@ -360,34 +388,12 @@ void sys_setLedPwmGreen (uint8_t on) {
 }
 
 
-
-
-void sys_setLedD6 (uint8_t on) {
-    if (on) {
-        PORTC |= (1 << PC4);
-    } else {
-        PORTC &= ~(1 << PC4);
-    }
-}
-
-void sys_setLedD5 (uint8_t on) {
-    if (on) {
-        PORTC |= (1 << PC3);
-    } else {
-        PORTC &= ~(1 << PC3);
-    }
-}
-
 void sys_toggleLifeLed () {
     PORTC ^= (1 << PC6);
 }
 
-void sys_toggleLedD6 () {
-    PORTC ^= (1 << PC4);
-}
-
-void sys_toggleLedD5 () {
-    PORTC ^= (1 << PC3);
+void sys_toggleLedPwmGreen () {
+    PORTD ^= (1 << PD4);
 }
 
 
@@ -409,52 +415,39 @@ ISR (USART0_RX_vect) {
     // app_handleUart0Byte(c);
 }
 
-// ISR (USART1_RX_vect) {
-//     volatile uint8_t data = UDR1;
-//     uint8_t status = 0;
-//     uint16_t tcnt1 = TCNT1;
-//     if (TCCR1B & (1 << CS11)) {
-//        if (tcnt1 > sys.modbus[0].dT1_35) {
-//            status |= (1 << SYS_MODBUS_STATUS_NEWFRAME);
-//        }
-//     } else {
-//         status |= (1 << SYS_MODBUS_STATUS_NEWFRAME);
-//     }
-//     TCNT1 = 0;
-//     TCCR1B = (1 << CS11);  // restart timer
-
-//     // UPE1 = 2  DOR1 = 3  FE1 = 4
-//     uint8_t errors = UCSR1A & ( (1 << FE1) | (1 << DOR1) | (1 << UPE1) );
-//     if (errors) {
-//         sys.modbus[0].errorCnt = sys_inc16BitCnt(sys.modbus[0].errorCnt);
-//     } else {
-//         sys.modbus[0].receivedByteCnt = sys_inc16BitCnt(sys.modbus[0].receivedByteCnt);
-//     }
-//     // sei();
-
-//     if (errors != 0) { status |= ((errors << 3) | (1 << SYS_MODBUS_STATUS_ERR_FRAME)); }
-//     if (tcnt1 > sys.modbus[0].dT1_35) status |= (1 << SYS_MODBUS_STATUS_NEWFRAME);
-//     app_handleUart1Byte(data, status);
-// }
+ISR (USART1_RX_vect) {
+    uint8_t b = UDR1;
+    #if GLOBAL_MODBUS_ECHOREQUEST != 0
+        UDR1 = b;
+    #endif
+    #if GLOBAL_MODBUS_DEBUGLEVEL > 5
+        printf(" %02x", b);
+    #endif
+    modbusAscii_handleModbusAsciiByte((char)b);
+}
 
 // Timer 0 Output/Compare Interrupt
 // called every 100us
 ISR (TIMER0_COMPA_vect) {
     static uint8_t cnt100us = 0;
-    static uint8_t cnt500us = 0;
-    static uint8_t busy = 0;
-
     cnt100us++;
     if (cnt100us >= 5) {
+        static uint8_t cnt500us = 0;
+        static uint8_t busy = 0;
         cnt100us = 0;
         cnt500us++;
         if (busy) {
-            sys.taskErr_u8 = sys_inc8BitCnt(sys.taskErr_u8);
+            sys_inc16BitCnt(&sys.err.taskErr_u16);
         } else {
             busy = 1;
             sei();
             if      (cnt500us & 0x01) app_task_1ms();
-            else if (cnt500us & 0x02) app_task_2ms();
+            else if (cnt500us & 0x02) {
+                app_task_2ms();
+                sys.adc0_u8 = ADCH;
+                ADCSRA |= (1 << ADSC);
+            
+            } 
             else if (cnt500us & 0x04) app_task_4ms();
             else if (cnt500us & 0x08) app_task_8ms();
             else if (cnt500us & 0x10) app_task_16ms();
@@ -471,5 +464,3 @@ ISR (TIMER1_COMPA_vect) {
     // app_handleUart1Timeout();
 }
 
-ISR (SPI_STC_vect) {
-}

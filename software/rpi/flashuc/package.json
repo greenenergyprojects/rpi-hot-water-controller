@@ -4,8 +4,8 @@
   "description": "Flash Atmel 8-bit uC via serial interface",
   "main": "main.js",
   "scripts": {
-    "build": "node_modules/gulp/bin/gulp.js --gulpfile gulpfile.js build",
-    "clean": "node_modules/gulp/bin/gulp.js --gulpfile gulpfile.js clean",
+    "build": "node_modules/gulp4/bin/gulp.js --gulpfile gulpfile.js build",
+    "clean": "node_modules/gulp4/bin/gulp.js --gulpfile gulpfile.js clean",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Manfred Steiner",
@@ -13,12 +13,11 @@
   "license": "MIT",
   "devDependencies": {
     "@types/nconf": "0.0.37",
-    "@types/node": "^8.10.36",
-    "@types/serialport": "^6.0.4",
-    "@types/sprintf-js": "^1.1.0",
-    "@types/through2": "^2.0.34",
+    "@types/node": "^8.10.38",
+    "@types/serialport": "^7.0.0",
+    "@types/sprintf-js": "^1.1.1",
     "del": "^3.0.0",
-    "gulp": "github:gulpjs/gulp#4.0",
+    "gulp4": "^4.0.2",
     "gulp-changed": "^3.2.0",
     "gulp-replace": "^1.0.0",
     "gulp-rsync": "0.0.8",
@@ -28,18 +27,17 @@
     "gulp-using": "^0.1.1",
     "merge-stream": "^1.0.1",
     "tslint": "^5.11.0",
-    "typescript": "^3.1.2",
+    "typescript": "^3.1.6",
     "vinyl-fs": "^3.0.3"
   },
   "dependencies": {
     "@types/debug": "0.0.31",
-    "debug-sx": "^0.2.3",
+    "debug-sx": "^0.2.4",
     "elf2ihex": "^1.0.0",
     "endian-reader": "^0.3.0",
     "nconf": "^0.10.0",
-    "rpi-gpio": "^1.0.0",
+    "rpi-gpio": "^2.1.0",
     "serialport": "^7.0.2",
-    "sprintf-js": "^1.1.1",
-    "through2": "^2.0.3"
+    "sprintf-js": "^1.1.1"
   }
 }

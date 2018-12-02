@@ -3,17 +3,16 @@
         {
             "name": "Linux",
             "includePath": [
-                "/usr/lib/avr/include/stdio.h",
-                "/usr/lib/avr/include/**",
-                "/usr/lib/gcc/avr/**",
-                "${workspaceFolder}/src/**"
+                "/usr/lib/avr/include",
+                "/usr/lib/gcc/avr",
+                "${workspaceFolder}/src"
             ],
-            "defines": [ "__AVR_ATmega324P__" ],
-            "forcedInclude": [ "/usr/share/avr/include/stdio.h" ],
+            "defines": [ "__AVR_ATmega324P__", "FDEV_SETUP_STREAM=", "_FDEV_SETUP_WRITE=", "_FDEV_SETUP_READ=" ],
+            "forcedInclude": [ "/usr/xlib/avr/include/stdio.h", "/usr/lib/avr/include/stdint.h" ],
             "compilerPath": "/usr/bin/avr-gcc",
             "cStandard": "c11",
             "cppStandard": "c++17",
-            "intelliSenseMode": "clang-x64",
+            "intelliSenseMode": "gcc-x64",
             "intelliSenseEngine": "default",
             "browse": {
                 "path": [

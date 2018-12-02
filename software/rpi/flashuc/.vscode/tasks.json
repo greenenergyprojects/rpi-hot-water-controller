@@ -3,7 +3,7 @@
     "tasks": [
         {
             "label": "build",
-            "command": "node_modules/gulp/bin/gulp.js",
+            "command": "node_modules/gulp4/bin/gulp.js",
             "type": "shell",
             "args": [
                 "--gulpfile",
@@ -11,7 +11,9 @@
                 "build"
             ],
             "group": "build",
-            "presentation" : { "reveal": "always" },
+            "presentation": {
+                "reveal": "always"
+            },
             "problemMatcher": [
                 {
                     "owner": "gulp-typescript",
@@ -32,7 +34,7 @@
         },
         {
             "label": "clean",
-            "command": "node_modules/gulp/bin/gulp.js",
+            "command": "node_modules/gulp4/bin/gulp.js",
             "type": "shell",
             "args": [
                 "--gulpfile",
@@ -40,11 +42,13 @@
                 "clean"
             ],
             "group": "build",
-            "presentation" : { "reveal": "silent" }
+            "presentation": {
+                "reveal": "silent"
+            }
         },
         {
             "label": "cleanAndBuild",
-            "command": "node_modules/gulp/bin/gulp.js",
+            "command": "node_modules/gulp4/bin/gulp.js",
             "type": "shell",
             "args": [
                 "--gulpfile",
@@ -52,22 +56,29 @@
                 "cleanAndBuild"
             ],
             "group": "build",
-            "presentation" : { "reveal": "silent" },
+            "presentation": {
+                "reveal": "silent"
+            },
             "problemMatcher": [
                 "$tsc-watch"
             ]
         },
         {
             "label": "buildAndLaunchOnRemote",
-            "command": "node_modules/gulp/bin/gulp.js",
+            "command": "node_modules/gulp4/bin/gulp.js",
             "type": "shell",
             "args": [
                 "--gulpfile",
                 "gulpfile.js",
                 "buildAndLaunchOnRemote"
             ],
-            "group": "build",
-            "presentation" : { "reveal": "always" },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always"
+            },
             "problemMatcher": [
                 {
                     "owner": "gulp-typescript",
@@ -85,6 +96,6 @@
                     }
                 }
             ]
-        },
+        }
     ]
 }

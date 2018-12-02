@@ -1812,4 +1812,6 @@ Text Notes 2700 4050 0    39   ~ 0
 Values for\nµC-VREF=1.0V (B2 open)
 Text Notes 2650 1150 0    39   ~ 0
 Values for\nµC-VREF=2.5V (B2 closed)
+Text Notes 10400 2300 0    60   ~ 0
+Maximum VGS\nat least 12V!
 $EndSCHEMATC

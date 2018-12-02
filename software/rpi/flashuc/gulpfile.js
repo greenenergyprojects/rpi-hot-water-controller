@@ -1,11 +1,11 @@
 // https://www.liquidlight.co.uk/blog/article/how-do-i-update-to-gulp-4/
 
-const remoteHostname = 'mbgwx3';
-const remoteTargetDir = '/home/pi/flashuc';
+const remoteHostname = 'pi-hwc';
+const remoteTargetDir = '/home/pi/rpi/flashuc';
 
 const fs = require('fs');
 
-const gulp         = require('gulp'),
+const gulp         = require('gulp4'),
       gChanged     = require('gulp-changed'),
       gReplace     = require('gulp-replace'),
       gRsync       = require('gulp-rsync'),
@@ -30,7 +30,7 @@ const remoteConfig = nconf.file('remote.json').get();
 const tsProject = gTypescript.createProject("tsconfig.json");
 
 const sshConfig = {
-    host: '10.200.80.196',
+    host: 'pi-hwc',
     port: 22,
     username: 'pi',
     privateKey: fs.readFileSync('/home/steiner/.ssh/id_rsa_rpi')

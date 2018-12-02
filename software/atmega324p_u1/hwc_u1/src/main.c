@@ -17,6 +17,8 @@
 #include <util/delay.h>
 
 #include "./sys.h"
+#include "./modbus.h"
+#include "modbus_ascii.h"
 #include "./app.h"
 
 // defines
@@ -26,14 +28,16 @@
 // ...
 
 // constants located in program flash and SRAM
-const char MAIN_WELCOME[] = "\nhot-water-controller U1";
+const char MAIN_WELCOME[] = "\r\nhot-water-controller U1";
 const char MAIN_DATE[] = __DATE__;
 const char MAIN_TIME[] = __TIME__;
-const char MAIN_HELP[] = "\n";
+const char MAIN_HELP[] = "\r\n";
 
 
 int main () {
     sys_init();
+    modbusAscii_init();
+    modbus_init();
 
     app_init();
     printf("%s %s %s %s", MAIN_WELCOME, MAIN_DATE, MAIN_TIME, MAIN_HELP);
@@ -44,6 +48,8 @@ int main () {
 
     while (1) {
         sys_main();
+        modbusAscii_main();
+        modbus_main();
         app_main();
     }
     return 0;

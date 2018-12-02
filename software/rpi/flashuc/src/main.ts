@@ -86,7 +86,12 @@ main();
 
 async function main () {
     try {
-        const elfFilename = path.join(__dirname, '..', 'atmega324p_u1.elf');
+        const flash = nconf.get('flash');
+        if (!flash || !flash.path) {
+            throw new Error('missing flash.path in config.json');
+        }
+        // const elfFilename = path.join(__dirname, '..', 'atmega324p_u1.elf');
+        const elfFilename = flash.path;
         const elf = await Elf.createFromFile(elfFilename);
         const d: Device = new Device('atmega324p', elf);
         // console.log(d.hexdump());
@@ -94,7 +99,7 @@ async function main () {
         const serial = await Serial.createInstance(nconf.get('serial'));
         await d.flash();
         await serial.close();
-        Gpio.shutdown();
+        await Gpio.shutdown();
 
     } catch (err) {
         console.log(err);

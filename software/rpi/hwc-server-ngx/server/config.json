@@ -1,0 +1,27 @@
+{
+    "server": {
+        "start": true,
+        "port": 8080,
+        "morgan": {
+            "disabled": true,
+            "config": "tiny"
+         }
+    },
+    "modbus": {
+        "device": "/dev/ttyUSB0",
+        "options": {
+            "baudRate": 115200,
+            "parity": "none"
+        }
+    },
+    "debug": {
+        "depth": 3,
+        "colors" : true,
+        "wtimediff": 6,
+        "time": "ddd, yyyy-mm-dd HH:MM:ss.l",
+        "wmodule": 15,
+        "wlevel": 6,
+        "location": "-*",
+        "enabled": "*, *::WARN, *::INFO"
+    }
+}

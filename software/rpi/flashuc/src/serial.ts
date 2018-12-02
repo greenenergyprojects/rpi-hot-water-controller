@@ -19,7 +19,7 @@ export interface ISerialConfig {
 export interface ITarget {
     index: number;
     name: string;
-    reset?: { typ: 'rpi-gpio', pin: string, level: 'low' | 'high', timeMillis: number };
+    reset?: { typ: 'rpi-gpio' | 'user', pin: string, level: 'low' | 'high', timeMillis: number };
 }
 
 export interface ITargetId {
@@ -106,7 +106,7 @@ export class Serial {
     public async reset (target?: number | string, timeoutMillis = 500): Promise<ITargetId> {
         const t = this.getTarget(target);
         if (!t) { throw new Error('invalid target ' + target); }
-        if (!t.reset) {
+        if (!t.reset || t.reset.typ === 'user') {
             return { target: t };
         }
         if (t.reset.typ !== 'rpi-gpio') { throw new Error('invalid reset type in config for ' + t.name); }

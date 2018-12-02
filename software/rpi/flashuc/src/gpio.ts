@@ -38,11 +38,19 @@ export class Gpio {
         });
     }
 
-    public static shutdown () {
-        if (this._gpio) {
-            this._gpio.destroy();
-            this._gpio = null;
-        }
+    public static async shutdown () {
+        return  new Promise<void>( (res, rej) => {
+            if (this._gpio) {
+                this._gpio.destroy( (err: any) => {
+                    this._gpio = null;
+                    if (err) {
+                        rej(err);
+                    } else {
+                        res();
+                    }
+                });
+            }
+        });
     }
 
     private static _gpio: any;

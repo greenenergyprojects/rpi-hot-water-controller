@@ -31,10 +31,10 @@
             "smartStep": true,
             "stopOnEntry": false,
             "port": 9229,
-            "address": "10.200.80.196",
+            "address": "pi-hwc",
             "restart": false,
             "localRoot": "${workspaceRoot}/",
-            "remoteRoot": "/home/pi/flashuc/",
+            "remoteRoot": "/home/pi/rpi/flashuc/",
             "internalConsoleOptions": "openOnSessionStart",
             "trace": false,
             "outputCapture": "console"

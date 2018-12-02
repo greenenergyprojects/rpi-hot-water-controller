@@ -2,13 +2,14 @@
     "flash": {
         "operation": "download",
         "typ": "elf",
-        "path": "atmega324p_u1.elf"
+        "path": "./atmega324p_u1.elf"
     },
     "serial": {
         "device": "/dev/ttyUSB0",
         "options": { "baudRate": 115200 },
-        "devices": [{
+        "targets": [{
             "index": 0,
+            "name": "U1",
             "reset": {
                 "typ": "user"
             }
