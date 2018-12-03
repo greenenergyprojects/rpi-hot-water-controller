@@ -13,8 +13,8 @@ struct App {
     uint8_t version;
     uint8_t debugLevel;
     struct App_ErrCounter err;
-    uint8_t setpoint4To20mA;
-    uint8_t curr4To20mAx8;
+    uint16_t setpoint4To20mAx2028;
+    uint16_t curr4To20mAx2048;
     uint8_t pwmLedTimer;
 };
 
@@ -28,9 +28,9 @@ extern struct App app;
 void app_init ();
 void app_main ();
 
-uint8_t  app_setSetpoint4To20mA (uint8_t value);
-uint8_t  app_getSetpoint4To20mA ();
-uint16_t app_getAdc4To20mA ();
+uint8_t  app_setSetpoint4To20mA (uint16_t value);
+uint16_t app_getSetpoint4To20mA ();
+uint16_t app_getCurr4To20mA ();
 
 
 void app_task_1ms   ();

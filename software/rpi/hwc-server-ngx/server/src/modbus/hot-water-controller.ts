@@ -103,7 +103,6 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
             throw new Error('illegal value ' + value);
         }
         value = value * 2048;
-        value = 70;
         const requ =  ModbusRequestFactory.createWriteHoldRegister(1, id + 1, value);
         const mr = await this.serial.send(requ);
         debug.info('set current => %o', mr.response.frame);

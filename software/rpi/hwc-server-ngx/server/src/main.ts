@@ -75,7 +75,7 @@ import { ModbusSerial } from './modbus/modbus-serial';
 
 let modbusSerial: ModbusSerial;
 
-debugger;
+// debugger;
 doStartup();
 
 async function doStartup () {
@@ -182,9 +182,9 @@ async function doSomeTests () {
     try {
         const d = ModbusDevice.getInstance('hwc:1');
         if (d instanceof HotWaterController) {
-            await d.writeCurrent4To20mA(10);
+            await d.writeCurrent4To20mA(20);
             await d.readCurrent4To20mA();
-            debug.info('current read done');
+            debug.info('current read done -> %s', sprintf('%.1fmA', d.current4To20mA));
         }
     } catch (err) {
         debug.warn(err);

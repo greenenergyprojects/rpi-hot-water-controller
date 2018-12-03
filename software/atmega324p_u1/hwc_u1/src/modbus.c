@@ -50,7 +50,7 @@ uint8_t modbus_readHoldRegister (uint16_t addr, uint16_t *value) {
 
     switch (addr) {
         case 0: *value = app_getSetpoint4To20mA(); return 0;
-        case 1: *value = app_getAdc4To20mA(); return 0;
+        case 1: *value = app_getCurr4To20mA(); return 0;
     }
     return 1;
 }
@@ -80,7 +80,7 @@ uint8_t modbus_writeHoldRegister (uint16_t addr, uint16_t value) {
         return 1;
     }
     switch (addr) {
-        case 0: return app_setSetpoint4To20mA((uint8_t)value);
+        case 0: return app_setSetpoint4To20mA(value);
     }
 
 }

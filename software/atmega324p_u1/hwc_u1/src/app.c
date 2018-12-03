@@ -61,11 +61,11 @@ void app_main (void) {
     if (test) {
         app_test();
     }
-    app.curr4To20mAx8 = 1 + (233 * sys.adc0_u8) / 256;
-    if (app.curr4To20mAx8 < (4 * 8)) {
+    app.curr4To20mAx2048 = (uint16_t)sys.adc0_u8 * 233 + 279; 
+    if (app.curr4To20mAx2048 < (4 * 2048)) {
         app.pwmLedTimer = 0;
     } else {
-        app.pwmLedTimer = 8000 / app.curr4To20mAx8;
+        app.pwmLedTimer = 8000 / (app.curr4To20mAx2048 / 256);
     }
     // if (app.setpoint4To20mA > 0) {
     //     sys_setLedPwmGreen(1);
@@ -74,19 +74,24 @@ void app_main (void) {
     // }
 }
 
-uint8_t app_getSetpoint4To20mA () {
-    return app.setpoint4To20mA;
+uint16_t app_getSetpoint4To20mA () {
+    return app.setpoint4To20mAx2028;
 }
 
-uint8_t app_setSetpoint4To20mA (uint8_t value) {
-    app.setpoint4To20mA = value;
-    sys_setPwm4To20mA(value);
+uint8_t app_setSetpoint4To20mA (uint16_t value) {
+    app.setpoint4To20mAx2028 = value;
+    uint32_t x1 = (uint32_t)value * 297 + 32768;
+    uint16_t x2 = x1 >> 16;
+    if (x2 > 255) { 
+        x2 = 255;
+    }
+    sys_setPwm4To20mA(x2);
     return 0;
 }
 
-uint16_t app_getAdc4To20mA () {
-    printf("ADC0=%3d\r\n", sys.adc0_u8);
-    return sys.adc0_u8;
+uint16_t app_getCurr4To20mA () {
+
+    return app.curr4To20mAx2048;
 }
 
 
@@ -96,16 +101,17 @@ uint16_t app_getAdc4To20mA () {
 
 void app_task_1ms (void) {
     static uint16_t timer = 0;
-    if (timer <= 200) {
+    if (timer <= 180) {
         timer = 1000;
     } else {
         timer--;
     }
-    if (app.curr4To20mAx8 < (4 * 8)) {
+    uint8_t x = app.curr4To20mAx2048 >> 8;
+    if (x < 32) {
         sys_setLedPwmGreen(0);
-    } else if (app.curr4To20mAx8 > (20 * 8)) {
+    } else if (x > (20 * 8)) {
         sys_setLedPwmGreen(1);
-    } else if (timer < (app.curr4To20mAx8 * 25) / 4) {
+    } else if (timer < (x * 25) / 4) {
         sys_setLedPwmGreen(1);
     } else {
         sys_setLedPwmGreen(0);
