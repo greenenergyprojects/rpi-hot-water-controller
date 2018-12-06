@@ -68,12 +68,14 @@ if (logfileConfig) {
 
 import { sprintf } from 'sprintf-js';
 import { Server } from './server';
-import { ModbusDevice } from './modbus/modbus-device';
-import { ModbusAscii } from './modbus/modbus-ascii';
+import { ModbusDevice, IModbusDeviceConfig } from './modbus/modbus-device';
+import { IModbusSerialDeviceConfig } from './modbus/modbus-serial-device';
 import { HotWaterController } from './modbus/hot-water-controller';
-import { ModbusSerial } from './modbus/modbus-serial';
+import { ModbusSerial, IModbusSerialConfig } from './modbus/modbus-serial';
+import { Monitor } from './monitor';
 
-let modbusSerial: ModbusSerial;
+const modbusSerials: ModbusSerial [] = [];
+let monitor: Monitor;
 
 // debugger;
 doStartup();
@@ -86,12 +88,39 @@ async function doStartup () {
             startupPrintVersion(gitInfo);
         }
 
-        modbusSerial = new ModbusSerial(nconf.get('modbus'));
-        const fm = new HotWaterController(modbusSerial, 1);
-        // fm.on('update', appendToHistoryFile);
-        ModbusDevice.addInstance(fm);
+        const modbusConfig: { serial: IModbusSerialConfig [], devices: IModbusDeviceConfig [] } = nconf.get('modbus');
+        if (modbusConfig && Array.isArray(modbusConfig.serial)) {
+            modbusConfig.serial.forEach( cfg => {
+                if (!cfg.disabled) {
+                    modbusSerials.push(new ModbusSerial(cfg));
+                }
+            });
+        }
+        if (modbusConfig && Array.isArray(modbusConfig.devices)) {
+            modbusConfig.devices.forEach( cfg => {
+                if (!cfg.disabled) {
+                    switch (cfg.class) {
+                        case 'HotWaterController': {
+                            const scfg = <IModbusSerialDeviceConfig>cfg;
+                            const serial = modbusSerials.find( item => item.config.device === scfg.serialDevice);
+                            if (!serial) { throw new Error('serial ' + scfg.serialDevice + ' not defined'); }
+                            const d = new HotWaterController(serial, scfg);
+                            ModbusDevice.addInstance(d);
+                            break;
+                        }
+                        default: throw new Error('invalid class for modbus device configuration');
+                    }
+                }
+            });
+        }
+        // modbusSerial = new ModbusSerial(nconf.get('modbus'));
+        // const fm = new HotWaterController(modbusSerial, 1);
+        // // fm.on('update', appendToHistoryFile);
+        // ModbusDevice.addInstance(fm);
 
-        await startupParallel();
+        const startPar = startupParallel();
+        await startupInSequence();
+        await startPar;
         await startupServer();
         doSomeTests();
         process.on('SIGINT', () => {
@@ -129,7 +158,16 @@ async function shutdown (src: string): Promise<void> {
     try { await Server.Instance.stop(); } catch (err) { rv++; console.log(err); }
     debug.fine('monitor shutdown done');
 
-    try { await modbusSerial.close(); } catch (err) { rv++; console.log(err); }
+    try { await monitor.shutdown(); } catch (err) { rv++; console.log(err); }
+    debug.fine('monitor shutdown done');
+
+    for (const ms of modbusSerials) {
+        try {
+            await ms.close();
+        } catch (err) {
+            rv++; console.log(err);
+        }
+    }
     debug.fine('modbusSerial shutdown done');
 
     clearTimeout(timer);
@@ -147,10 +185,19 @@ function startupPrintVersion (info?: git.GitInfo) {
 }
 
 async function startupParallel (): Promise<any []> {
-     const p: Promise<any> [] = [];
-    p.push(modbusSerial.open());
-    const rv = await Promise.all(p);
-    debug.info('startupParallel finished');
+    const p: Promise<any> [] = [];
+    Promise.all(p).then( () => { debug.info('startupParallel finished'); });
+    return p;
+}
+
+async function startupInSequence (): Promise<any []> {
+    const rv: Promise<any> [] = [];
+    let p: Promise<any>;
+    for (const ms of modbusSerials) {
+        p = ms.open(); await p; rv.push(p);
+    }
+    p = Monitor.createInstance(); monitor = await p; rv.push(p);
+    debug.info('startupInSequence finished');
     return rv;
 }
 
@@ -184,7 +231,7 @@ async function doSomeTests () {
         if (d instanceof HotWaterController) {
             await d.writeCurrent4To20mA(20);
             await d.readCurrent4To20mA();
-            debug.info('current read done -> %s', sprintf('%.1fmA', d.current4To20mA));
+            debug.info('current read done -> %s', sprintf('%.1f%s', d.current4To20mA.value, d.current4To20mA.unit));
         }
     } catch (err) {
         debug.warn(err);

@@ -8,11 +8,27 @@
          }
     },
     "modbus": {
-        "device": "/dev/ttyUSB0",
-        "options": {
-            "baudRate": 115200,
-            "parity": "none"
-        }
+        "serial": [{
+            "disabled": false,
+            "device": "/dev/ttyUSB0",
+            "options": {
+                "baudRate": 115200,
+                "parity": "none"
+            }
+        }],
+        "devices": [{
+            "disabled": false,
+            "type": "modbus-ascii",
+            "class": "HotWaterController",
+            "name": "hwc:1",
+            "serialDevice": "/dev/ttyUSB0",
+            "slaveAddress": 1,
+            "timeoutMilis": 200
+        }]
+    },
+    "monitor": {
+        "disabled": false,
+        "pollingPeriodMillis": 2000
     },
     "debug": {
         "depth": 3,

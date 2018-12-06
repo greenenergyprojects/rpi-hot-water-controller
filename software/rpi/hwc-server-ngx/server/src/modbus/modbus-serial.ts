@@ -3,10 +3,10 @@ import * as debugsx from 'debug-sx';
 const debug: debugsx.IFullLogger = debugsx.createFullLogger('modbus:ModbusSerial');
 
 
-interface IModbusSerialConfig {
+export interface IModbusSerialConfig {
+    disabled?: boolean;
     device:  string;
     options: SerialPort.OpenOptions;
-    timeoutMillis?: number;
 }
 
 import * as SerialPort from 'serialport';
@@ -29,9 +29,10 @@ export class ModbusSerial {
         this._config = config || nconf.get('modbus-serial');
         if (!this._config || !this._config.device || !this._config.options) { throw new Error('missing/wrong config'); }
         this._config.options.autoOpen = false;
-        if (!(this._config.timeoutMillis > 0)) {
-            this._config.timeoutMillis = 500;
-        }
+    }
+
+    public get config (): IModbusSerialConfig {
+        return this._config;
     }
 
     public async open () {
@@ -77,9 +78,8 @@ export class ModbusSerial {
         }
     }
 
-    public async send (request: ModbusRequestFactory, timeoutMillis?: number): Promise<ModbusRequest> {
+    public async send (request: ModbusRequestFactory, timeoutMillis: number): Promise<ModbusRequest> {
         if (!this._serialPort || this._openPromise) { throw new Error('serialPort not open'); }
-        timeoutMillis = timeoutMillis || this._config.timeoutMillis;
         if (timeoutMillis <= 0) { throw new Error('invalid value for timeoutMillis'); }
         return new Promise<ModbusRequest>( (res, rej) => {
             const x: IPendingRequest = {

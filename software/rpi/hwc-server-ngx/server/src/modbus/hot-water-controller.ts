@@ -9,43 +9,29 @@ import { ModbusDevice } from './modbus-device';
 import { ModbusSerial } from './modbus-serial';
 import { ModbusFrame } from './modbus-frame';
 import { ModbusRequest, ModbusRequestFactory } from './modbus-request';
-import { ModbusSerialDevice } from './modbus-serial-device';
+import { ModbusSerialDevice, IModbusSerialDeviceConfig } from './modbus-serial-device';
+import { Value, IValue } from '../data/common/value';
 
 
 export interface IHotWaterControllerValues {
     lastUpdateAt: Date;      // time stamp of received value
-    setpoint4To20mA: number; // setpoint, floating point value 0.0 ... 20.0 mA
-    current4To20mA: number;  // measured, floating point value 0.0 ... 20.0 mA
+    setpoint4To20mA: IValue; // setpoint, floating point value 0.0 ... 20.0 mA
+    current4To20mA: IValue;  // measured, floating point value 0.0 ... 20.0 mA
 }
 
 
 export class HotWaterController extends ModbusSerialDevice implements IHotWaterControllerValues {
 
-    public static getInstance (id: string | number): HotWaterController {
-        id = id.toString();
-        let rv = ModbusDevice.getInstance(id);
-        if (!rv) {
-            rv = ModbusDevice.instances.find( (d) => (d instanceof HotWaterController) && (d.address === +id) );
-        }
-        return rv instanceof HotWaterController ? rv : null;
-    }
-
-    // *******************************************************************
-
     private _lastUpdateAt: Date;
     private _lastDemandAt: Date;
     private _eventEmitter: EventEmitter;
 
-    private _setpoint4To20mA: number;
-    private _current4To20mA: number;
+    private _setpoint4To20mA: Value;
+    private _current4To20mA: Value;
 
-    public constructor (serial: ModbusSerial, address: number) {
-        super(serial, address);
+    public constructor (serial: ModbusSerial, config: IModbusSerialDeviceConfig) {
+        super(serial, config);
         this._eventEmitter = new EventEmitter();
-    }
-
-    public get id (): string {
-        return 'hwc:' + this.address;
     }
 
     public on (event: 'update', listener: (values: IHotWaterControllerValues) => void) {
@@ -58,42 +44,29 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
         return this;
     }
 
+    public get config (): IModbusSerialDeviceConfig {
+        return <IModbusSerialDeviceConfig>super.config;
+    }
 
-    // public handleResponse (requ: ModbusFrame, resp: ModbusFrame) {
-    //     let err: Error;
-    //     if (!requ || !requ.ok || !requ.checkSumOk || requ.address !== this.address) {
-    //         err = new Error('invalid request, cannot handle response');
-    //     } else if (!resp || !resp.ok || !resp.checkSumOk || resp.address !== this.address || (resp.byteAt(2) !== (requ.wordAt(4) * 2))) {
-    //         err = new Error('invalid response');
-    //     }
-    //     switch (resp.funcCode) {
-    //         case 0x03: {
-    //                 const l = resp.buffer.length - 3;
-    //                 if (l !== 4) {
-    //                     err = new Error('invalid response, wrong number of registers');
-    //                 } else {
-    //                     this.setHoldRegisters(resp.buffer, 3, l);
-    //                     debug.finer('%O', this.toValuesObject());
-    //                 }
-    //                 break;
-    //         }
-    //         default: {
-    //             err = new Error('invalid function code, cannot handle response'); break;
-    //         }
-    //     }
-    //     if (err) {
-    //         debug.warn(err);
-    //         throw err;
-    //     }
-    // }
+
+    public async readHoldRegister(startAddress: number, quantity: number) {
+        const requ =  ModbusRequestFactory.createReadHoldRegister(this.config.slaveAddress, startAddress, quantity);
+        const mr = await this.serial.send(requ, this.config.timeoutMillis);
+        for (let i = 0; i < quantity; i++) {
+            const v = Math.round(mr.response.wordAt(3 + i * 2) / 2048 * 100) / 100;
+            switch ( startAddress + i) {
+                case 1: this._setpoint4To20mA = new Value({ createdAt: Date.now(), value: v, unit: 'mA' }); break;
+                case 2: this._current4To20mA = new Value({ createdAt: Date.now(), value: v, unit: 'mA' }); break;
+                default: debug.warn('hold register addr %d not handled', startAddress + i);
+            }
+        }
+    }
 
     public async readCurrent4To20mA () {
-        const id = 1;
-        const quantity = 1;
-        const requ =  ModbusRequestFactory.createReadHoldRegister(1, id + 1, quantity);
-        const mr = await this.serial.send(requ);
-        this._current4To20mA = mr.response.wordAt(3) / 2048;
-        debug.info('current = %smA', sprintf('%.2f', this. _current4To20mA));
+        await this.readHoldRegister(2, 1);
+        if (debug.finer.enabled) {
+            debug.finer('current = %s', sprintf('%.2f%s', this. _current4To20mA.value, this. _current4To20mA.unit));
+        }
     }
 
     public async writeCurrent4To20mA (value: number) {
@@ -103,20 +76,20 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
             throw new Error('illegal value ' + value);
         }
         value = value * 2048;
-        const requ =  ModbusRequestFactory.createWriteHoldRegister(1, id + 1, value);
-        const mr = await this.serial.send(requ);
-        debug.info('set current => %o', mr.response.frame);
+        const requ =  ModbusRequestFactory.createWriteHoldRegister(this.config.slaveAddress, id + 1, value);
+        debug.fine('current4To20mA: write setpoint %d', value);
+        const mr = await this.serial.send(requ, this.config.timeoutMillis);
     }
 
     public get lastUpdateAt (): Date {
         return this._lastUpdateAt;
     }
 
-    public get setpoint4To20mA (): number {
+    public get setpoint4To20mA (): Value {
         return this._setpoint4To20mA;
     }
 
-    public get current4To20mA (): number {
+    public get current4To20mA (): Value {
         return this._current4To20mA;
     }
 
@@ -124,8 +97,8 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
     public toValuesObject (): IHotWaterControllerValues {
         const rv = {
             lastUpdateAt:    this._lastUpdateAt,
-            setpoint4To20mA: this._setpoint4To20mA,
-            current4To20mA:  this._current4To20mA
+            setpoint4To20mA: this._setpoint4To20mA.toObject(),
+            current4To20mA:  this._current4To20mA.toObject()
         };
         return rv;
     }
