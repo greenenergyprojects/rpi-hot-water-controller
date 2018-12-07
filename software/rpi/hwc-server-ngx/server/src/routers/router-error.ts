@@ -45,6 +45,13 @@ export class NotFoundError extends RouterError {
     }
 }
 
+export class InternalServerError extends RouterError {
+    constructor (msg: string, cause?: Error) {
+        super(msg, 500, cause);
+    }
+}
+
+
 export function handleError (err: Error,  req: Request, res: Response, next: NextFunction, debug: ISimpleLogger) {
     if (!err) {
         throw new Error('invalid argument');

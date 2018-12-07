@@ -2,11 +2,13 @@
 import { DataRecord } from './data-record';
 import { IEnergyRecord, EnergyRecord } from './energy-record';
 import { ICurrent4To20mA, Current4To20mA } from './current4-to-20ma';
+import { IValue, Value } from './value';
 
 export interface IMonitorRecord {
     createdAt: Date | number | string;
     powerWatts: number;
     energy?: IEnergyRecord [];
+    energyDaily?: IValue;
     current4to20mA?: ICurrent4To20mA;
 }
 
@@ -15,6 +17,7 @@ export class MonitorRecord extends DataRecord<IMonitorRecord> implements IMonito
     private _createdAt: Date;
     private _powerWatts: number;
     private _energy: EnergyRecord [] = [];
+    private _energyDaily?: Value;
     private _current4to20mA?: Current4To20mA;
 
     constructor (data: IMonitorRecord) {
@@ -27,6 +30,9 @@ export class MonitorRecord extends DataRecord<IMonitorRecord> implements IMonito
             }
             if (data.current4to20mA) {
                 this._current4to20mA = new Current4To20mA(data.current4to20mA);
+            }
+            if (data.energyDaily) {
+                this._energyDaily = new Value(data.energyDaily);
             }
         } catch (err) {
             throw new MonitorRecordError('parsing IMonitorRecord fails', err);
@@ -45,6 +51,10 @@ export class MonitorRecord extends DataRecord<IMonitorRecord> implements IMonito
         if (this._current4to20mA) {
             rv.current4to20mA = this._current4to20mA.toObject(convertDate);
         }
+        if (this._energyDaily) {
+            rv.energyDaily = this._energyDaily.toObject(convertDate);
+        }
+
         return rv;
     }
 
@@ -62,6 +72,10 @@ export class MonitorRecord extends DataRecord<IMonitorRecord> implements IMonito
 
     public get current4to20mA (): Current4To20mA {
         return this._current4to20mA;
+    }
+
+    public get energyDaily (): Value {
+        return this._energyDaily;
     }
 
 }

@@ -73,6 +73,7 @@ import { IModbusSerialDeviceConfig } from './modbus/modbus-serial-device';
 import { HotWaterController } from './modbus/hot-water-controller';
 import { ModbusSerial, IModbusSerialConfig } from './modbus/modbus-serial';
 import { Monitor } from './monitor';
+import { Statistics } from './statistics';
 
 const modbusSerials: ModbusSerial [] = [];
 let monitor: Monitor;
@@ -97,21 +98,21 @@ async function doStartup () {
             });
         }
         if (modbusConfig && Array.isArray(modbusConfig.devices)) {
-            modbusConfig.devices.forEach( cfg => {
+            for (const cfg of modbusConfig.devices) {
                 if (!cfg.disabled) {
                     switch (cfg.class) {
                         case 'HotWaterController': {
                             const scfg = <IModbusSerialDeviceConfig>cfg;
                             const serial = modbusSerials.find( item => item.config.device === scfg.serialDevice);
                             if (!serial) { throw new Error('serial ' + scfg.serialDevice + ' not defined'); }
-                            const d = new HotWaterController(serial, scfg);
+                            const d = await HotWaterController.createInstance(serial, scfg);
                             ModbusDevice.addInstance(d);
                             break;
                         }
                         default: throw new Error('invalid class for modbus device configuration');
                     }
                 }
-            });
+            }
         }
         // modbusSerial = new ModbusSerial(nconf.get('modbus'));
         // const fm = new HotWaterController(modbusSerial, 1);
@@ -119,6 +120,7 @@ async function doStartup () {
         // ModbusDevice.addInstance(fm);
 
         const startPar = startupParallel();
+        await Statistics.createInstance();
         await startupInSequence();
         await startPar;
         await startupServer();

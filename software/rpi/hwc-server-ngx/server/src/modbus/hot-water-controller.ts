@@ -22,6 +22,22 @@ export interface IHotWaterControllerValues {
 
 export class HotWaterController extends ModbusSerialDevice implements IHotWaterControllerValues {
 
+    public static getInstance (): HotWaterController {
+        if (!this._instance) { throw new Error('instance not created yet'); }
+        return this._instance;
+    }
+
+    public static async createInstance (serial: ModbusSerial, config: IModbusSerialDeviceConfig) {
+        if (this._instance) { throw new Error('instance already created'); }
+        this._instance = new HotWaterController(serial, config);
+        return this._instance;
+    }
+
+    private static _instance: HotWaterController;
+
+
+    // *****************************************************************
+
     private _lastUpdateAt: Date;
     private _lastDemandAt: Date;
     private _eventEmitter: EventEmitter;
@@ -29,7 +45,7 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
     private _setpoint4To20mA: Value;
     private _current4To20mA: Value;
 
-    public constructor (serial: ModbusSerial, config: IModbusSerialDeviceConfig) {
+    private constructor (serial: ModbusSerial, config: IModbusSerialDeviceConfig) {
         super(serial, config);
         this._eventEmitter = new EventEmitter();
     }

@@ -28,7 +28,19 @@
     },
     "monitor": {
         "disabled": false,
-        "pollingPeriodMillis": 2000
+        "pollingPeriodMillis": 2000,
+        "tempFile": {
+            "path": ".monitor-hwc-temp",
+            "backups": 3
+        }
+    },
+    "statistics": {
+        "disabled": false,
+        "timeslotSeconds": 10,
+        "dbtyp": "csvfile",
+        "csvfile": {
+            "filename": "hwc-data_%Y-%M-%D.csv"
+        }
     },
     "debug": {
         "depth": 3,
