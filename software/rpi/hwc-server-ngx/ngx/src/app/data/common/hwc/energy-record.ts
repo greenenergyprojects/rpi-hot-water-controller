@@ -1,4 +1,4 @@
-import { DataRecord } from './data-record';
+import { DataRecord } from '../data-record';
 
 export interface IEnergyRecord {
     startedAt: Date | number | string;

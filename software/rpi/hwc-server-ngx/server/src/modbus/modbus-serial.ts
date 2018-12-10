@@ -79,6 +79,7 @@ export class ModbusSerial {
     }
 
     public async send (request: ModbusRequestFactory, timeoutMillis: number): Promise<ModbusRequest> {
+        debug.info('send request, timeoutMillis=%s', timeoutMillis);
         if (!this._serialPort || this._openPromise) { throw new Error('serialPort not open'); }
         if (timeoutMillis <= 0) { throw new Error('invalid value for timeoutMillis'); }
         return new Promise<ModbusRequest>( (res, rej) => {

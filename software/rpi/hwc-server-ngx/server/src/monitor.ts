@@ -8,11 +8,12 @@ import * as path from 'path';
 
 import { sprintf } from 'sprintf-js';
 import * as nconf from 'nconf';
-import { MonitorRecord, IMonitorRecord } from './data/common/monitor-record';
+import { MonitorRecord, IMonitorRecord } from './data/common/hwc/monitor-record';
 import { ModbusDevice } from './modbus/modbus-device';
 import { HotWaterController } from './modbus/hot-water-controller';
 import { runInThisContext } from 'vm';
 import { Statistics } from './statistics';
+import { Controller } from './controller';
 
 export interface IMonitorConfig {
     disabled?: boolean;
@@ -96,21 +97,23 @@ export class Monitor {
 
     public async refresh (): Promise<MonitorRecord> {
         const hwc = HotWaterController.getInstance();
-        await hwc.readHoldRegister(1, 2);
+        // await hwc.refresh();
         debug.fine('current read done -> %s', sprintf('%.1f%s', hwc.current4To20mA.value, hwc.current4To20mA.unit));
+        const ctrl = Controller.getInstance();
         const rData: IMonitorRecord = {
             createdAt: Date.now(),
-            powerWatts: 0,
+            mode: ctrl.mode,
+            powerSetting: ctrl.powerSetting.toObject(),
+            activePower: Controller.getInstance().activePower.toObject(),
+            setpointPower: ctrl.setpointPower.toObject(),
+            maxPower: ctrl.setpointPower.toObject(),
             energy: [],
             current4to20mA: {
                 setpoint: hwc.setpoint4To20mA.toObject(),
                 current: hwc.current4To20mA.toObject()
             }
         };
-
-        if (rData.current4to20mA.current.value > 6) {
-            rData.powerWatts = this.currentMilliAmpsToPowerWatts(rData.current4to20mA.current.value);
-        }
+        debug.finer('%O', rData);
 
         if (this._lastRecord) {
             const dayHasChanged =  this._lastRecord.createdAt.getDay() !==  new Date().getDay();
@@ -121,10 +124,12 @@ export class Monitor {
             const dt = +rData.createdAt - this._lastRecord.createdAt.getTime();
             if (dt > 10000) {
                 debug.warn('dt>10s (dt=%d) -> skip energy accumulation', sprintf('%.02fs', dt / 1000));
-            } else if (!(rData.powerWatts >= 0)) {
-                debug.warn('powerWatts unkown -> skip energy accumulation');
+            } else if (!(rData.activePower.value >= 0)) {
+                debug.warn('activePower unkown -> skip energy accumulation');
+            } else if (rData.activePower.unit !== 'W') {
+                debug.warn('wrong unit (' + rData.activePower.unit + ') on activePower -> skip energy accumulation');
             } else {
-                this._energyDaily += rData.powerWatts * dt / 3600000;
+                this._energyDaily += rData.activePower.value * dt / 3600000;
             }
         }
         rData.energyDaily = { createdAt: rData.createdAt, value: this._energyDaily, unit: 'Wh' };
@@ -174,27 +179,6 @@ export class Monitor {
         }
 
         this._timer = setInterval( () => this.handleTimerEvent(), this._config.pollingPeriodMillis);
-    }
-
-    private currentMilliAmpsToPowerWatts (currentMilliAmps: number): number {
-        if (typeof (currentMilliAmps) !== 'number' || Number.isNaN(currentMilliAmps)) {
-            debug.warn('invalid currentMilliAmps %s', currentMilliAmps);
-            return 0;
-        } else if (currentMilliAmps < 7) {
-            return 0;
-        } else if (currentMilliAmps > 20) {
-            return Monitor.powerTable[20];
-        } else {
-            const p1 = Monitor.powerTable[Math.floor(currentMilliAmps)];
-            const p2 = Monitor.powerTable[Math.floor(currentMilliAmps) + 1];
-            const p = p1 + (p2 - p1) * (currentMilliAmps - Math.floor(currentMilliAmps));
-            if (p < 0 || p > 2000) {
-                debug.warn('invalid power value %f', p);
-                return 0;
-            } else {
-                return p;
-            }
-        }
     }
 
 

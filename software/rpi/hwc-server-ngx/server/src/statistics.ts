@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import { sprintf } from 'sprintf-js';
 import * as nconf from 'nconf';
-import { MonitorRecord } from './data/common/monitor-record';
+import { MonitorRecord } from './data/common/hwc/monitor-record';
 
 interface IStatisticsConfig {
     disabled?: boolean;
@@ -280,7 +280,7 @@ class StatisticsRecordFactory extends StatisticsRecord {
             switch (h.id) {
                 case 'set-4to24mA':  this.handleValue(v, this._valueCount, r.current4to20mA.setpoint.value); break;
                 case 'curr-4to24mA': this.handleValue(v, this._valueCount, r.current4to20mA.current.value); break;
-                case 'p-boiler':     this.handleValue(v, this._valueCount, r.powerWatts); break;
+                case 'p-boiler':     this.handleValue(v, this._valueCount, r.activePower.value); break;
                 case 'e-daily':      this.handleValue(v, this._valueCount, r.energyDaily.value); break;
                 default: debug.warn('unsupported id %s', h.id); break;
             }

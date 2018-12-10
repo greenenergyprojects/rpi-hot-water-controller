@@ -14,7 +14,7 @@ import * as bodyParser from 'body-parser';
 // import * as jwt from 'jsonwebtoken';
 
 import { handleError, RouterError, BadRequestError, AuthenticationError, NotFoundError } from './routers/router-error';
-import { RouterData } from './routers/routers-data';
+import { Router } from './routers/router';
 
 interface IServerConfig {
     start: boolean;
@@ -78,7 +78,7 @@ export class Server {
         this._express.get('/*', (req, res, next) => this.handleGet(req, res, next));
         // this._express.use((req, res, next) => Auth.Instance.authorizeRequest(req, res, next));
         // this._express.get('/auth', (req, res, next) => Auth.Instance.handleGetAuth(<any>req, res, next));
-        this._express.use('/data', RouterData.Instance);
+        this._express.use('/', Router.Instance);
 
         this._express.all('*', (req, res, next) => this.handleNotFound(req, res, next));
         this._express.use(

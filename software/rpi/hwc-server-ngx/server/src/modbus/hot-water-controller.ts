@@ -10,7 +10,7 @@ import { ModbusSerial } from './modbus-serial';
 import { ModbusFrame } from './modbus-frame';
 import { ModbusRequest, ModbusRequestFactory } from './modbus-request';
 import { ModbusSerialDevice, IModbusSerialDeviceConfig } from './modbus-serial-device';
-import { Value, IValue } from '../data/common/value';
+import { Value, IValue } from '../data/common/hwc/value';
 
 
 export interface IHotWaterControllerValues {
@@ -34,6 +34,9 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
     }
 
     private static _instance: HotWaterController;
+    private static powerTable: { [ current: number ]: number } = {
+        6: 2.8, 7: 5.7, 8: 26, 9: 48, 10: 122, 11: 257, 12: 460, 13: 716, 14: 1045, 15: 1292, 16: 1553, 17: 1730, 18: 1870, 19: 1935, 20: 1950
+    };
 
 
     // *****************************************************************
@@ -44,10 +47,14 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
 
     private _setpoint4To20mA: Value;
     private _current4To20mA: Value;
+    private _activePower: Value;
 
     private constructor (serial: ModbusSerial, config: IModbusSerialDeviceConfig) {
         super(serial, config);
         this._eventEmitter = new EventEmitter();
+        this._setpoint4To20mA = this.createValue(Number.NaN, 'mA');
+        this._current4To20mA = this.createValue(Number.NaN, 'mA');
+        this._activePower = this.createValue(Number.NaN, 'W');
     }
 
     public on (event: 'update', listener: (values: IHotWaterControllerValues) => void) {
@@ -64,6 +71,9 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
         return <IModbusSerialDeviceConfig>super.config;
     }
 
+    public async refresh () {
+        await this.readHoldRegister(1, 2);
+    }
 
     public async readHoldRegister(startAddress: number, quantity: number) {
         const requ =  ModbusRequestFactory.createReadHoldRegister(this.config.slaveAddress, startAddress, quantity);
@@ -71,8 +81,12 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
         for (let i = 0; i < quantity; i++) {
             const v = Math.round(mr.response.wordAt(3 + i * 2) / 2048 * 100) / 100;
             switch ( startAddress + i) {
-                case 1: this._setpoint4To20mA = new Value({ createdAt: Date.now(), value: v, unit: 'mA' }); break;
-                case 2: this._current4To20mA = new Value({ createdAt: Date.now(), value: v, unit: 'mA' }); break;
+                case 1: this._setpoint4To20mA = this.createValue(v, 'mA'); break;
+                case 2: {
+                    this._current4To20mA = this.createValue(v, 'mA' );
+                    this._activePower = this.createValue(this.currentMilliAmpsToPowerWatts(v), 'W' );
+                    break;
+                }
                 default: debug.warn('hold register addr %d not handled', startAddress + i);
             }
         }
@@ -94,7 +108,12 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
         value = value * 2048;
         const requ =  ModbusRequestFactory.createWriteHoldRegister(this.config.slaveAddress, id + 1, value);
         debug.fine('current4To20mA: write setpoint %d', value);
+        debug.info('writeCurrent4To20mA(%s) -> send', value);
         const mr = await this.serial.send(requ, this.config.timeoutMillis);
+    }
+
+    public async writeActivePower (powerWatts: number) {
+        await this.writeCurrent4To20mA(this.powerWattsToCurrentMilliAmps(powerWatts));
     }
 
     public get lastUpdateAt (): Date {
@@ -109,6 +128,10 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
         return this._current4To20mA;
     }
 
+    public get activePower (): Value {
+        return this._activePower;
+    }
+
 
     public toValuesObject (): IHotWaterControllerValues {
         const rv = {
@@ -117,6 +140,64 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
             current4To20mA:  this._current4To20mA.toObject()
         };
         return rv;
+    }
+
+    private createValue (value: number, unit: string): Value {
+        return new Value({
+            createdAt: Date.now(),
+            createdFrom: 'HotWaterController',
+            value: value,
+            unit: unit
+        });
+    }
+
+    private currentMilliAmpsToPowerWatts (currentMilliAmps: number): number {
+        if (typeof (currentMilliAmps) !== 'number' || Number.isNaN(currentMilliAmps)) {
+            debug.warn('invalid currentMilliAmps %s', currentMilliAmps);
+            return 0;
+        } else if (currentMilliAmps < 7) {
+            return 0;
+        } else if (currentMilliAmps > 20) {
+            return HotWaterController.powerTable[20];
+        } else {
+            const p1 = HotWaterController.powerTable[Math.floor(currentMilliAmps)];
+            const p2 = HotWaterController.powerTable[Math.floor(currentMilliAmps) + 1];
+            const p = p1 + (p2 - p1) * (currentMilliAmps - Math.floor(currentMilliAmps));
+            if (p < 0 || p > 2000) {
+                debug.warn('invalid power value %f', p);
+                return 0;
+            } else {
+                return p;
+            }
+        }
+    }
+
+    private powerWattsToCurrentMilliAmps (powerWatts: number): number {
+        if (typeof (powerWatts) !== 'number' || Number.isNaN(powerWatts)) {
+            debug.warn('invalid powerWatts %s', powerWatts);
+            return 0;
+        } else if (powerWatts <= HotWaterController.powerTable[6]) {
+            return 0;
+        } else if (powerWatts >= HotWaterController.powerTable[20]) {
+            return 20;
+        } else {
+            for (let i = 6; i < 19; i++) {
+                const p1 = HotWaterController.powerTable[i];
+                const p2 = HotWaterController.powerTable[i + 1];
+                if (powerWatts >= p1 && powerWatts <= p2) {
+                    const k = p2 - p1;
+                    const d = p1 - k * i;
+                    const curr = Math.round((powerWatts - d) / k * 100) / 100;
+                    if (curr < 0 || curr > 20) {
+                        debug.warn('calculation error (current=%f) from power value %f', curr, powerWatts);
+                        return 0;
+                    }
+                    return curr;
+                }
+            }
+            debug.warn('cannot calculate current from power value %f', powerWatts);
+            return 0;
+        }
     }
 
 }

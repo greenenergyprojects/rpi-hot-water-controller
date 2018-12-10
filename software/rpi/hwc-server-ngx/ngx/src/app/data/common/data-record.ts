@@ -1,4 +1,3 @@
-import { reverse } from "dns";
 
 export abstract class DataRecord<T> {
 
@@ -50,7 +49,9 @@ export abstract class DataRecord<T> {
             const value = data[options.attribute];
             if (value instanceof Date) {
                 rv = new Date(value.getTime());
-            } else if (typeof value === 'string' || typeof value === 'number') {
+            } else if (typeof value === 'number') {
+                rv = new Date(value);
+            } else if (typeof value === 'string') {
                 rv = new Date(value);
             } else {
                 throw new Error('value has invalid type (' + typeof value + ')');
@@ -58,6 +59,21 @@ export abstract class DataRecord<T> {
             return rv;
         } catch (err) {
             throw new ParseDateError(options.attribute + ' parse error', err);
+        }
+    }
+
+    static parseEnum<T> (data: any, options: IParseEnumOptions<T>): T {
+        if (!options || !options.attribute) { throw new ParseEnumError('missing options/attribute name'); }
+        if (!data || !data[options.attribute]) { throw new ParseEnumError('missing data/attribute name'); }
+        if (!options.validate && (!data || data[options.attribute] === undefined || data[options.attribute] === null)) { return null; }
+        try {
+            const value = data[options.attribute];
+            if (options.validValues.indexOf(value) < 0) {
+                throw new Error('illegal value ("' + value + '") in attribute ' + options.attribute);
+            }
+            return value;
+        } catch (err) {
+            throw new ParseEnumError(options.attribute + ' parse error', err);
         }
     }
 
@@ -80,6 +96,15 @@ export abstract class DataRecord<T> {
         }
     }
 
+    // static enumToStringValues<T>(myEnum: T): keyof T {
+    //     return Object.keys(myEnum).filter(k => typeof (myEnum as any)[k] === 'number') as any;
+    // }
+    static enumToStringValues<T>(myEnum: T): string [] {
+        const rv: string [] = [];
+        Object.keys(myEnum).forEach( item => rv.push((<any>myEnum)[item]));
+        return rv;
+    }
+
 
     constructor (data: T) {
     }
@@ -93,6 +118,12 @@ export interface IParseDateOptions {
     validate?: boolean;
 }
 
+export interface IParseEnumOptions<T> {
+    attribute: string;
+    validate?: boolean;
+    validValues: string [];
+}
+
 export interface IParseNumberOptions {
     attribute: string;
     validate?: boolean;
@@ -101,7 +132,7 @@ export interface IParseNumberOptions {
     max?: number;
     upperLimit?: number;
     lowerLimit?: number;
-    limitDecimalPlaces?: number
+    limitDecimalPlaces?: number;
 }
 
 export interface IParseStringOptions {
@@ -113,6 +144,10 @@ export interface IParseStringOptions {
 
 
 export class ParseDateError extends Error {
+    constructor (msg: string, public cause?: Error) { super(msg); }
+}
+
+export class ParseEnumError extends Error {
     constructor (msg: string, public cause?: Error) { super(msg); }
 }
 

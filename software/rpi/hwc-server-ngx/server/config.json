@@ -26,6 +26,14 @@
             "timeoutMilis": 200
         }]
     },
+    "controller": {
+        "startMode": "power",
+        "powerSetting": {
+            "minWatts": 0,
+            "maxWatts": 2000,
+            "desiredPower": 1000
+        }
+    },
     "monitor": {
         "disabled": false,
         "pollingPeriodMillis": 2000,

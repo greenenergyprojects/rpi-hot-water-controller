@@ -72,6 +72,7 @@ import { ModbusDevice, IModbusDeviceConfig } from './modbus/modbus-device';
 import { IModbusSerialDeviceConfig } from './modbus/modbus-serial-device';
 import { HotWaterController } from './modbus/hot-water-controller';
 import { ModbusSerial, IModbusSerialConfig } from './modbus/modbus-serial';
+import { Controller } from './controller';
 import { Monitor } from './monitor';
 import { Statistics } from './statistics';
 
@@ -157,6 +158,9 @@ async function shutdown (src: string): Promise<void> {
     }, shutdownMillis > 0 ? shutdownMillis : 500);
     let rv = 0;
 
+    try { await Controller.getInstance().shutdown(); } catch (err) { rv++; console.log(err); }
+    debug.fine('controller shutdown done');
+
     try { await Server.Instance.stop(); } catch (err) { rv++; console.log(err); }
     debug.fine('monitor shutdown done');
 
@@ -198,6 +202,7 @@ async function startupInSequence (): Promise<any []> {
     for (const ms of modbusSerials) {
         p = ms.open(); await p; rv.push(p);
     }
+    p = Controller.createInstance(); await p; rv.push(p);
     p = Monitor.createInstance(); monitor = await p; rv.push(p);
     debug.info('startupInSequence finished');
     return rv;
@@ -229,12 +234,12 @@ async function startupShutdown (src?: string): Promise<void> {
 
 async function doSomeTests () {
     try {
-        const d = ModbusDevice.getInstance('hwc:1');
-        if (d instanceof HotWaterController) {
-            await d.writeCurrent4To20mA(20);
-            await d.readCurrent4To20mA();
-            debug.info('current read done -> %s', sprintf('%.1f%s', d.current4To20mA.value, d.current4To20mA.unit));
-        }
+        // const d = ModbusDevice.getInstance('hwc:1');
+        // if (d instanceof HotWaterController) {
+        //     await d.writeCurrent4To20mA(20);
+        //     await d.readCurrent4To20mA();
+        //     debug.info('current read done -> %s', sprintf('%.1f%s', d.current4To20mA.value, d.current4To20mA.unit));
+        // }
     } catch (err) {
         debug.warn(err);
     }

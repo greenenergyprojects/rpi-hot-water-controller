@@ -1,4 +1,4 @@
-import { DataRecord } from './data-record';
+import { DataRecord } from '../data-record';
 import { IValue, Value } from './value';
 
 export interface ICurrent4To20mA {
