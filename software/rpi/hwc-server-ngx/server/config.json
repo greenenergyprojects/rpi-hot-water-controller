@@ -23,7 +23,15 @@
             "name": "hwc:1",
             "serialDevice": "/dev/ttyUSB0",
             "slaveAddress": 1,
-            "timeoutMilis": 200
+            "timeoutMilis": 200,
+            "reset": {
+                "disabled": false,
+                "onstart": true,
+                "typ": "rpi-gpio",
+                "pin": 22,
+                "level": "low",
+                "timeMillis": 10
+            }
         }]
     },
     "controller": {

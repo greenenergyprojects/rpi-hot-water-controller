@@ -73,7 +73,9 @@ export class ModbusRequest {
     }
 
     public set error (value: ModbusRequestError) {
-        if (this._error) { throw new Error('error already set'); }
+        if (this._error) {
+            debug.warn('error already set\n%o\nold error: %e\nnew error: %e', this, this.error, value);
+        }
         this._error = value;
     }
 }

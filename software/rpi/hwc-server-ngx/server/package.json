@@ -22,7 +22,7 @@
     "morgan": "^1.9.1",
     "nconf": "^0.10.0",
     "pug": "^2.0.3",
-    "rpi-gpio": "^2.1.0",
+    "rpi-gpio": "^2.1.2",
     "serialport": "^7.1.0",
     "sprintf-js": "^1.1.1"
   },

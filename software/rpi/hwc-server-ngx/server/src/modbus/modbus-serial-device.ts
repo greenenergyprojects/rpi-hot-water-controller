@@ -6,9 +6,19 @@ const debug: debugsx.IFullLogger = debugsx.createFullLogger('modbus:ModbusSerial
 import { ModbusDevice, IModbusDeviceConfig } from './modbus-device';
 import { ModbusSerial } from './modbus-serial';
 
+export interface IModbusSerialDeviceResetConfig {
+    disabled?: boolean;
+    onstart: boolean;
+    typ: 'rpi-gpio' | 'user';
+    pin: number;
+    level: 'low' | 'high';
+    timeMillis: number;
+}
+
 export interface IModbusSerialDeviceConfig extends IModbusDeviceConfig {
     serialDevice: string;
     slaveAddress: number;
+    reset?: IModbusSerialDeviceResetConfig;
 }
 
 export abstract class ModbusSerialDevice extends ModbusDevice {

@@ -14,16 +14,19 @@ import { sprintf } from 'sprintf-js';
 import * as nconf from 'nconf';
 import { ModbusAsciiFrame } from './modbus-ascii-frame';
 import { ModbusRequestFactory, ModbusRequest, ModbusRequestError } from './modbus-request';
+import { IModbusSerialDeviceConfig } from './modbus-serial-device';
 
 
 export class ModbusSerial {
 
     private _config: IModbusSerialConfig;
+    private _devices: IModbusSerialDeviceConfig [];
     private _serialPort: SerialPort;
     private _openPromise: { resolve: () => void, reject: (err: Error) => void};
     private _frame: string;
     private _receivedFrames: ModbusAsciiFrame [] = [];
     private _pending: IPendingRequest [] = [];
+    private _errCnt = 0;
 
     public constructor (config?: IModbusSerialConfig) {
         this._config = config || nconf.get('modbus-serial');
@@ -35,7 +38,7 @@ export class ModbusSerial {
         return this._config;
     }
 
-    public async open () {
+    public async open (devices?: IModbusSerialDeviceConfig []) {
         if (this._openPromise) {
             return Promise.reject(new Error('open already called, execute close() first.'));
         }
@@ -54,9 +57,15 @@ export class ModbusSerial {
                     const o = Object.assign(this._config.options);
                     delete o.autoOpen;
                     debug.info('serial port ' + this._config.device + ' opened (' + JSON.stringify(o) + ')');
-                    this._openPromise.resolve();
+                    this._devices = devices || [];
+                    this.resetTargets().then( () => {
+                        this._openPromise.resolve();
+                        this._openPromise = null;
+                    }).catch ( (err2) => {
+                        this._openPromise.reject(err2);
+                        this._openPromise = null;
+                    });
                 }
-                this._openPromise = null;
             });
         });
         return rv;
@@ -101,6 +110,37 @@ export class ModbusSerial {
         });
     }
 
+    private async resetTargets (isOnStart?: boolean) {
+        if (this._devices.length === 0) {
+            debug.info('no devices known -> skip resetTargets');
+            return;
+        }
+        const p: Promise<void> [] = [];
+        for (const d of this._devices) {
+            if (!d.reset) {
+                 debug.info('no reset defined for target %s -> skip reset', d.name);
+            } else if (d.reset.disabled === true) {
+                debug.info('reset disabled for target %s -> skip reset', d.name);
+            } else {
+                p.push(this.resetTarget(d, isOnStart));
+            }
+        }
+        await Promise.all(p);
+    }
+
+    private async resetTarget(device: IModbusSerialDeviceConfig, isOnStart?: boolean) {
+        if (!device || !device.reset || device.reset.disabled === true) {
+            return;
+        }
+        const r = device.reset;
+        if (r.typ === 'user') {
+            debug.info('reset configured as "user" for target %s -> skip reset', device.name);
+            return;
+        }
+        debug.warn('not implemented');
+        
+    }
+
     private handleTimeout (r: IPendingRequest, modbusTimeout: boolean) {
         if (r.timer && modbusTimeout) {
             clearTimeout(r.timer);
@@ -124,6 +164,12 @@ export class ModbusSerial {
         if (this._pending.length > 0) {
             this._pending.splice(0, 1);
             debug.finer('handleError(): removing pending request, length = %s', this._pending.length);
+        }
+        this._errCnt++;
+        if (this._errCnt > 10) {
+            debug.warn('modbus serial seems to be down, reset target?');
+        } else if (this._errCnt > 5) {
+            debug.warn('modbus serial not working');
         }
         r.requ.error = err;
         if (r.timer) {
@@ -198,6 +244,10 @@ export class ModbusSerial {
                         err = new Error('LRC/CRC error on request');
                     }
                     const r = this._pending[0];
+                    if (this._errCnt > 5) {
+                        debug.info('modbus serial seems to work now');
+                    }
+                    this._errCnt = 0;
                     if (f) {
                         if (!r.requ.requestReceivedAt) {
                             try {
