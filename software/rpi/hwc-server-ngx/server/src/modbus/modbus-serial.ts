@@ -14,17 +14,19 @@ import { sprintf } from 'sprintf-js';
 import * as nconf from 'nconf';
 import { ModbusAsciiFrame } from './modbus-ascii-frame';
 import { ModbusRequestFactory, ModbusRequest, ModbusRequestError } from './modbus-request';
-import { IModbusSerialDeviceConfig } from './modbus-serial-device';
+import { IModbusSerialDeviceConfig, ModbusSerialDevice } from './modbus-serial-device';
+import { Gpio } from './gpio';
 
 
 export class ModbusSerial {
 
     private _config: IModbusSerialConfig;
-    private _devices: IModbusSerialDeviceConfig [];
+    private _devices: ModbusSerialDevice [];
     private _serialPort: SerialPort;
+    private _receive: { frames: boolean, chars: boolean } = { frames: false, chars: false };
     private _openPromise: { resolve: () => void, reject: (err: Error) => void};
     private _frame: string;
-    private _receivedFrames: ModbusAsciiFrame [] = [];
+    private _receivedChars: string;
     private _pending: IPendingRequest [] = [];
     private _errCnt = 0;
 
@@ -38,7 +40,11 @@ export class ModbusSerial {
         return this._config;
     }
 
-    public async open (devices?: IModbusSerialDeviceConfig []) {
+    public get device (): string {
+        return this._config.device;
+    }
+
+    public async open (devices?: ModbusSerialDevice []) {
         if (this._openPromise) {
             return Promise.reject(new Error('open already called, execute close() first.'));
         }
@@ -48,6 +54,8 @@ export class ModbusSerial {
             this._serialPort.on('error', this.handleOnSerialError.bind(this));
             this._serialPort.on('data', this.handleOnSerialData.bind(this));
             this._openPromise = { resolve: resolve, reject: reject };
+            this._receive.chars = false;
+            this._receive.frames = false;
             this._serialPort.open( (err) => {
                 if (!this._openPromise || !this._openPromise.resolve) { return; }
                 if (err) {
@@ -58,7 +66,7 @@ export class ModbusSerial {
                     delete o.autoOpen;
                     debug.info('serial port ' + this._config.device + ' opened (' + JSON.stringify(o) + ')');
                     this._devices = devices || [];
-                    this.resetTargets().then( () => {
+                    this.resetTargets(true).then( () => {
                         this._openPromise.resolve();
                         this._openPromise = null;
                     }).catch ( (err2) => {
@@ -96,7 +104,7 @@ export class ModbusSerial {
                 requ: request,
                 timer: null,
                 timerModbus: null,
-                resolve: res,
+                resolve: <any>res,
                 reject: rej
             };
             const thiz = this;
@@ -105,7 +113,7 @@ export class ModbusSerial {
             }, timeoutMillis);
             this._pending.push(x);
             if (this._pending.length === 1) {
-                this.write(this._pending[0]);
+                this.execute(this._pending[0]);
             }
         });
     }
@@ -115,30 +123,81 @@ export class ModbusSerial {
             debug.info('no devices known -> skip resetTargets');
             return;
         }
-        const p: Promise<void> [] = [];
+        const proms: Promise<ModbusRequest | IResetRequest> [] = [];
         for (const d of this._devices) {
-            if (!d.reset) {
+            if (!d.config.reset) {
                  debug.info('no reset defined for target %s -> skip reset', d.name);
-            } else if (d.reset.disabled === true) {
+            } else if (d.config.reset.disabled === true) {
                 debug.info('reset disabled for target %s -> skip reset', d.name);
             } else {
-                p.push(this.resetTarget(d, isOnStart));
+                const r: IResetRequest = {
+                    device: d,
+                    isOnStart: isOnStart
+                };
+                const p = new Promise<ModbusRequest | IResetRequest>( (res, rej) => {
+                    const x: IPendingRequest = {
+                        requ: r,
+                        timer: null,
+                        timerModbus: null,
+                        resolve: res,
+                        reject: rej
+                    };
+                    const thiz = this;
+                    this._pending.push(x);
+                    if (this._pending.length === 1) {
+                        this.execute(this._pending[0]);
+                    }
+                });
+                proms.push(p);
             }
         }
-        await Promise.all(p);
+        await Promise.all(proms);
     }
 
-    private async resetTarget(device: IModbusSerialDeviceConfig, isOnStart?: boolean) {
-        if (!device || !device.reset || device.reset.disabled === true) {
+    private async resetTarget(req: IPendingRequest) {
+        const d = req && req.requ && (<IResetRequest>req.requ).device;
+        const isOnStart = req && req.requ && (<IResetRequest>req.requ).isOnStart;
+        if (!d || !d.config || !d.config.reset || d.config.reset.disabled === true) {
             return;
         }
-        const r = device.reset;
+        const r = d.config.reset;
         if (r.typ === 'user') {
-            debug.info('reset configured as "user" for target %s -> skip reset', device.name);
+            debug.info('reset configured as "user" for target %s -> skip reset', d.name);
             return;
         }
-        debug.warn('not implemented');
-        
+        try {
+            this._receive.chars = false;
+            this._receive.frames = false;
+            const pin = '' + r.pin;
+            const resetLevel = r.level === 'high' ? true : false;
+            debug.info('reset target %s', d.name);
+            this._receivedChars = '';
+            this._receive.chars = true;
+            if (isOnStart) {
+                await Gpio.setup(pin, 'OUT');
+                await Gpio.setPin(pin, !resetLevel);
+                await Gpio.delayMillis(10);
+            }
+            this._receivedChars = '';
+            this._receive.chars = true;
+            await Gpio.setPin(pin, !resetLevel);
+            await Gpio.delayMillis(10);
+            await Gpio.setPin(pin, resetLevel);
+            await Gpio.delayMillis(10);
+            await Gpio.setPin(pin, !resetLevel);
+            await Gpio.delayMillis(10);
+            await Gpio.delayMillis(5000);
+            debug.info('reset done for target %s\n-->%s', d.name, this._receivedChars);
+            this.handleSuccess(req);
+        } catch (err) {
+            debug.warn('reset fails for target %s\%e', d.name, err);
+            this.handleError(req, err);
+        } finally {
+            this._receive.chars = false;
+            this._receivedChars = '';
+            this._frame = '';
+            this._receive.frames = true;
+        }
     }
 
     private handleTimeout (r: IPendingRequest, modbusTimeout: boolean) {
@@ -151,16 +210,47 @@ export class ModbusSerial {
         }
         r.timerModbus = null;
 
-        let err: ModbusRequestError;
-        if (modbusTimeout) {
-            err = new ModbusRequestError('Modbus Timeout', r.requ);
+        if (r.requ instanceof ModbusRequest) {
+            let err: ModbusRequestError;
+            if (modbusTimeout) {
+                err = new ModbusRequestError('Modbus Timeout', r.requ);
+            } else {
+                err = new ModbusRequestError('Timeout', r.requ);
+            }
+            this.handleError(r, err);
         } else {
-            err = new ModbusRequestError('Timeout', r.requ);
+            this.handleError(r, new Error('Timeout'));
         }
-        this.handleError(r, err);
+
     }
 
-    private handleError (r: IPendingRequest, err: ModbusRequestError) {
+    private handleSuccess (r: IPendingRequest, result?: ModbusRequest) {
+        if (this._pending.length > 0) {
+            if (this._pending[0] === r) {
+                this._pending.splice(0, 1);
+                debug.finer('handleSuccess(): removing pending request, length = %s', this._pending.length);
+            } else {
+                debug.warn('handleSuccess(): wrong pending request -> skip removement');
+            }
+        }
+        if (r.timer) {
+            clearTimeout(r.timer);
+            r.timer = null;
+        }
+        if (r.timerModbus) {
+            clearTimeout(r.timerModbus);
+            r.timerModbus = null;
+        }
+
+        r.resolve(r.requ);
+        if (this._pending.length > 0) {
+            this.execute(this._pending[0]);
+        }
+
+    }
+
+
+    private handleError (r: IPendingRequest, err: ModbusRequestError | Error) {
         if (this._pending.length > 0) {
             this._pending.splice(0, 1);
             debug.finer('handleError(): removing pending request, length = %s', this._pending.length);
@@ -187,20 +277,36 @@ export class ModbusSerial {
         }
     }
 
+
+    private execute (r: IPendingRequest) {
+        if (r.requ instanceof ModbusRequest) {
+            this.write(r);
+        } else if (r.requ && (<IResetRequest>r.requ).device instanceof ModbusSerialDevice) {
+            this.resetTarget(r);
+        } else {
+            this.handleError(r, new ModbusRequestError('invalid request', null));
+        }
+    }
+
     private write (r: IPendingRequest) {
         const thiz = this;
         process.nextTick( () => {
+            if (!(r.requ instanceof ModbusRequest)) {
+                this.handleError(r, new Error('invalid request in write()'));
+                return;
+            }
+            const requ = <ModbusRequest>r.requ;
             this._serialPort.write(r.requ.request.frame, (err) => {
                 if (err) {
                     this.handleError(r, new ModbusRequestError('serial interface error', err));
                 } else {
                     if (debug.finest.enabled) {
                         debug.finest('pending length = %s', this._pending.length);
-                        debug.finest('request written on serial interface (%o)', r.requ.request.buffer);
+                        debug.finest('request written on serial interface (%o)', requ.request.buffer);
                     }
-                    r.requ.sentAt = new Date();
+                    requ.sentAt = new Date();
                     r.timerModbus = setTimeout( () => {
-                        debug.warn('Timeout %sms', Date.now() - r.requ.sentAt.getTime()) ;
+                        debug.warn('Timeout %sms', Date.now() - requ.sentAt.getTime()) ;
                         thiz.handleTimeout(r, true);
                     }, 800);
                 }
@@ -214,11 +320,22 @@ export class ModbusSerial {
     }
 
     private handleOnSerialData (data: Buffer) {
-
         if (!(data instanceof Buffer)) {
             debug.warn('serial input not as expected...');
             return;
         }
+        if (this._receive.chars) {
+            this._frame = null;
+            for (const b of data) {
+                const c = String.fromCharCode(b);
+                this._receivedChars += c;
+            }
+            return;
+        }
+        if (!this._receive.frames) {
+            return;
+        }
+
         if (this._pending.length === 0) {
             debug.warn('unexpected bytes (no request pending) received (%o)', data);
         } else {
@@ -244,14 +361,19 @@ export class ModbusSerial {
                         err = new Error('LRC/CRC error on request');
                     }
                     const r = this._pending[0];
+                    if (!(r.requ instanceof ModbusRequest)) {
+                        this.handleError(r, new Error('receive Modbus frame, but no modbus request pending'));
+                        return;
+                    }
+                    const requ = <ModbusRequest>r.requ;
                     if (this._errCnt > 5) {
                         debug.info('modbus serial seems to work now');
                     }
                     this._errCnt = 0;
                     if (f) {
-                        if (!r.requ.requestReceivedAt) {
+                        if (!requ.requestReceivedAt) {
                             try {
-                                r.requ.requestReceived = f;
+                                requ.requestReceived = f;
                                 debug.finer('receive request (LRC %s) %o', f.lrcOk ? 'OK' : 'ERROR', f);
                             } catch (e) {
                                 if (err) {
@@ -260,33 +382,19 @@ export class ModbusSerial {
                                 debug.warn('waiting for request, but receiving invalid frame\n%o\n%e', f, e);
                             }
                         } else {
-                            r.requ.response = f;
+                            requ.response = f;
                             debug.finer('receive response (LRC %s) %o', f.lrcOk ? 'OK' : 'ERROR', f);
                         }
                     }
 
-                    if (err || r.requ.response) {
-                        this._pending.splice(0, 1);
+                    if (err || requ.response) {
                         debug.finer('handleOnSerialData(): removing pending request -> length =%s', this._pending.length);
-                        if (r.timer) {
-                            clearTimeout(r.timer);
-                            r.timer = null;
-                        }
-                        if (r.timerModbus) {
-                            clearTimeout(r.timerModbus);
-                            r.timerModbus = null;
-                        }
-
                         if (err) {
                             const message = err && err.message ? ' (' + err.message + ')' : '';
-                            r.requ.error = new ModbusRequestError('Modbus request fails' + message, r.requ, err);
-                            r.reject(r.requ.error);
+                            r.requ.error = new ModbusRequestError('Modbus request fails' + message, requ, err);
+                            this.handleError(r, err);
                         } else  {
-                            r.resolve(r.requ);
-                        }
-
-                        if (this._pending.length > 0) {
-                            this.write(this._pending[0]);
+                            this.handleSuccess(r, requ);
                         }
                     }
                 }
@@ -296,10 +404,16 @@ export class ModbusSerial {
 
 }
 
+interface IResetRequest {
+    device: ModbusSerialDevice;
+    isOnStart: boolean;
+    error?: any;
+}
+
 interface IPendingRequest {
-    requ: ModbusRequestFactory;
+    requ?: ModbusRequestFactory | IResetRequest;
     timer: NodeJS.Timer;
     timerModbus: NodeJS.Timer;
-    resolve: (requ: ModbusRequest) => void;
+    resolve: (requ: IResetRequest | ModbusRequest) => void;
     reject: (error: any) => void;
 }

@@ -1,4 +1,4 @@
-export const VERSION = '0.1.0';
+export const VERSION = '0.2.0';
 
 import * as nconf from 'nconf';
 import * as fs from 'fs';
@@ -69,20 +69,25 @@ if (logfileConfig) {
 import { sprintf } from 'sprintf-js';
 import { Server } from './server';
 import { ModbusDevice, IModbusDeviceConfig } from './modbus/modbus-device';
-import { IModbusSerialDeviceConfig } from './modbus/modbus-serial-device';
+import { IModbusSerialDeviceConfig, ModbusSerialDevice } from './modbus/modbus-serial-device';
 import { HotWaterController } from './modbus/hot-water-controller';
 import { ModbusSerial, IModbusSerialConfig } from './modbus/modbus-serial';
 import { Controller } from './controller';
 import { Monitor } from './monitor';
 import { Statistics } from './statistics';
+import { Gpio } from './modbus/gpio';
+
 
 const modbusSerials: ModbusSerial [] = [];
 let monitor: Monitor;
+const serialDevices: { [ device: string]: ModbusSerialDevice [] } = {};
 
 // debugger;
 doStartup();
 
 async function doStartup () {
+    // debug.info('delay for start' + VERSION);
+    // await Gpio.delayMillis(5000);
     debug.info('Start hwc-webserver-ngx V' + VERSION);
     try {
         if (nconf.get('git')) {
@@ -108,6 +113,10 @@ async function doStartup () {
                             if (!serial) { throw new Error('serial ' + scfg.serialDevice + ' not defined'); }
                             const d = await HotWaterController.createInstance(serial, scfg);
                             ModbusDevice.addInstance(d);
+                            if (!serialDevices[serial.device]) {
+                                serialDevices[serial.device] = [];
+                            }
+                            serialDevices[serial.device].push(d);
                             break;
                         }
                         default: throw new Error('invalid class for modbus device configuration');
@@ -176,6 +185,9 @@ async function shutdown (src: string): Promise<void> {
     }
     debug.fine('modbusSerial shutdown done');
 
+    try { await Gpio.shutdown(); } catch (err) { rv++; console.log(err); }
+    debug.fine('gpio shutdown done');
+
     clearTimeout(timer);
     debug.info('shutdown successfully finished');
     process.exit(rv);
@@ -200,7 +212,7 @@ async function startupInSequence (): Promise<any []> {
     const rv: Promise<any> [] = [];
     let p: Promise<any>;
     for (const ms of modbusSerials) {
-        p = ms.open(); await p; rv.push(p);
+        p = ms.open(serialDevices[ms.device]); await p; rv.push(p);
     }
     p = Controller.createInstance(); await p; rv.push(p);
     p = Monitor.createInstance(); monitor = await p; rv.push(p);

@@ -101,7 +101,10 @@ export class Router {
             }
             res.send({
                 mode: c.mode,
-                powerSetting: c.powerSetting.toObject()
+                powerSetting: c.powerSetting.toObject(),
+                activePower: c.activePower.toObject(),
+                setpointPower: c.setpointPower.toObject(),
+                maxPower: c.maxPower.toObject()
             });
         } catch (err) {
             handleError(err, req, res, next, debug);

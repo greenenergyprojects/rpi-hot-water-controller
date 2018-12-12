@@ -30,6 +30,10 @@ export abstract class ModbusSerialDevice extends ModbusDevice {
         this._serial = serial;
     }
 
+    public get config (): IModbusSerialDeviceConfig {
+        return <IModbusSerialDeviceConfig>super.config;
+    }
+
     public get serial (): ModbusSerial {
         return this._serial;
     }

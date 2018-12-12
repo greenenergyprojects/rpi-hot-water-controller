@@ -52,6 +52,18 @@ export class Gpio {
         });
     }
 
+    public static delayMillis (millis: number): Promise<void> {
+        if (!(millis > 0)) {
+            return Promise.reject('invalid millis ' + millis);
+        } else {
+            return new Promise<void>( (res, rej) => {
+                setTimeout( () => {
+                    res();
+                }, millis);
+            });
+        }
+    }
+
     private static _gpio: any;
 
     private static get gpio (): any {
