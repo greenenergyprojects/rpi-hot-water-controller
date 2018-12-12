@@ -14,10 +14,6 @@
 #include <avr/wdt.h>
 
 #ifndef UART1
-   #define UART0
-#endif
-
-#ifndef UART1
    #define UDR UDR0
    #define UCSRA UCSR0A
    #define UCSRB UCSR0B
@@ -164,9 +160,18 @@ int16_t recBufferBase64ToBin (char p[]) {
 
 
 void sendUartByte (char ch) {
-    UDR = ch;
-    while ((UCSRA & 0x20) == 0x00) {
-    }
+#ifdef UART0
+    UDR0 = ch;
+#endif    
+#ifdef UART1
+    UDR1 = ch;
+#endif    
+#ifdef UART0
+    while ((UCSR0A & 0x20) == 0x00) {}
+#endif    
+#ifdef UART1
+    while ((UCSR1A & 0x20) == 0x00) {}
+#endif    
 }
 
 void sendLineFeed () {
@@ -277,12 +282,19 @@ void sendResponseStatus (uint8_t status) {
 }
 
 uint8_t readSerial (char *c) {
-    if ((UCSRA & 0x80) == 0) {
-        return 0;
-    } else {
-        *c = UDR;
+#ifdef UART0    
+    if ((UCSR0A & 0x80) != 0) {
+        *c = UDR0;
         return 1;
     }
+#endif
+#ifdef UART1
+    if ((UCSR1A & 0x80) != 0) {
+        *c = UDR1;
+        return 1;
+    }
+#endif    
+    return 0;
 }
 
 void boot_program_page (uint32_t addr, uint8_t buf[]) {
@@ -434,10 +446,20 @@ int main () {
     // init I/O-register
     MCUSR = 0;     // first step to turn off WDT
     wdt_disable(); // second step to turn off WDT
-    UCSRA = 0x02; // double the UART speed
-    UCSRB = 0x18; // RX + TX enable
-    UBRRH = 0;
-    UBRRL = (F_CPU / BAUDRATE + 4) / 8 - 1;
+
+#ifdef UART0
+    UCSR0A = 0x02; // double the UART speed
+    UCSR0B = 0x18; // RX + TX enable
+    UBRR0H = 0;
+    UBRR0L = (F_CPU / BAUDRATE + 4) / 8 - 1;
+#endif
+#ifdef UART1
+    UCSR1A = 0x02; // double the UART speed
+    UCSR1B = 0x18; // RX + TX enable
+    UBRR1H = 0;
+    UBRR1L = (F_CPU / BAUDRATE + 4) / 8 - 1;
+#endif
+
     #ifdef SPI_MASTER 
         DDRB |= (1 << PB7) | (1 << PB5) | (1 << PB4);  // SCLK, MOSI, nSS
         PORTB |= (1 << PB4);
