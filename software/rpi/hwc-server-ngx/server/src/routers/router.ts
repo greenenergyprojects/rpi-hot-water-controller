@@ -11,9 +11,9 @@ import { VERSION } from '../main';
 import { Monitor } from '../monitor';
 import { IMonitorRecord } from '../data/common/hwc/monitor-record';
 import { HotWaterController } from '../modbus/hot-water-controller';
-import { ModbusDevice } from '../modbus/modbus-device';
 import { Controller } from '../controller';
 import { Value } from '../data/common/hwc/value';
+import { BoilerMode, IBoilerMode } from '../data/common/hwc/boiler-mode';
 
 
 
@@ -114,11 +114,10 @@ export class Router {
     private async postController (req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
             const c = Controller.getInstance();
-            res.send({
-                done: false,
-                mode: c.mode,
-                powerSetting: c.powerSetting.toObject()
-            });
+            const data: IBoilerMode = req.body;
+            const bm = new BoilerMode(data);
+            const rv = await c.setBoilerMode(bm, 'POST /controller');
+            res.send(rv);
         } catch (err) {
             handleError(err, req, res, next, debug);
         }

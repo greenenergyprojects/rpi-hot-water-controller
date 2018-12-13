@@ -4,6 +4,7 @@ import { IEnergyRecord, EnergyRecord } from './energy-record';
 import { ICurrent4To20mA, Current4To20mA } from './current4-to-20ma';
 import { IPowerSetting, PowerSetting } from './power-setting';
 import { IValue, Value } from './value';
+import { ControllerMode } from './boiler-mode';
 
 export interface IMonitorRecord {
     createdAt: Date | number | string;
@@ -116,7 +117,7 @@ export class MonitorRecord extends DataRecord<IMonitorRecord> implements IMonito
 
 }
 
-export enum ControllerMode { off = 'off', power = 'power', test = 'test', shutdown='shutdown' }
+
 
 export class MonitorRecordError extends Error {
     constructor (msg: string, public cause?: Error) { super(msg); }
