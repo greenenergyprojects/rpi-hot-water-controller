@@ -257,7 +257,12 @@ export class ModbusSerial {
         }
         this._errCnt++;
         if (this._errCnt > 10) {
-            debug.warn('modbus serial seems to be down, reset target?');
+            debug.warn('modbus serial seems to be down, reset target now');
+            this.resetTargets(false).then( () => {
+                debug.info('targets reseted');
+            }).catch( (er) => {
+                debug.warn('reset target fails\n%e', err);
+            });
         } else if (this._errCnt > 5) {
             debug.warn('modbus serial not working');
         }

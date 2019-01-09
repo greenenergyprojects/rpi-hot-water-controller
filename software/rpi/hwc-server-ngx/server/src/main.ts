@@ -1,4 +1,4 @@
-export const VERSION = '0.3.0';
+export const VERSION = '0.4.0';
 
 import * as nconf from 'nconf';
 import * as fs from 'fs';
@@ -9,7 +9,6 @@ import * as git from './utils/git';
 process.on('unhandledRejection', (reason, p) => {
     const now = new Date();
     console.log(now.toLocaleDateString() + '/' + now.toLocaleTimeString() + ': unhandled rejection at: Promise', p, 'reason:', reason);
-    debugger;
 });
 
 

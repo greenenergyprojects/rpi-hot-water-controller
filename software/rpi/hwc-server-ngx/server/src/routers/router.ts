@@ -14,6 +14,7 @@ import { HotWaterController } from '../modbus/hot-water-controller';
 import { Controller } from '../controller';
 import { Value } from '../data/common/hwc/value';
 import { BoilerMode, IBoilerMode } from '../data/common/hwc/boiler-mode';
+import { SSL_OP_NETSCAPE_CA_DN_BUG } from 'constants';
 
 
 
@@ -115,8 +116,10 @@ export class Router {
         try {
             const c = Controller.getInstance();
             const data: IBoilerMode = req.body;
+            debug.info('POST /controller...\n%o',data);
             const bm = new BoilerMode(data);
-            const rv = await c.setBoilerMode(bm, 'POST /controller');
+            const rv = await c.setBoilerMode(bm, 'POST /boilermode');
+            debug.info('POST /controller => %o', rv);
             res.send(rv);
         } catch (err) {
             handleError(err, req, res, next, debug);
