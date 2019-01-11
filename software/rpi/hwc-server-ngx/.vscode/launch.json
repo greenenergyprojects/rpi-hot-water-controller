@@ -56,6 +56,24 @@
             "restart": false,
             "localRoot": "${workspaceRoot}/",
             "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "Attach to RPI",
+            "address": "pi-hwc",
+            "remoteRoot": "/home/pi/rpi/hwc-server-ngx/server/",
+            "smartStep": true,
+            "stopOnEntry": false,
+            "type": "node",
+            "request": "attach",
+            // "cwd": "${workspaceRoot}/dist",
+            // "outFiles": [ "${workspaceRoot}/dist/*.js" ],
+            // "trace": "all",
+            "trace": false,
+            "sourceMaps": true,
+            "port": 9229,
+            "restart": false,
+            "localRoot": "${workspaceRoot}/",
+            "internalConsoleOptions": "openOnSessionStart"
         }
     ]
 }

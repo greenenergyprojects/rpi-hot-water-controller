@@ -1,4 +1,4 @@
-export const VERSION = '0.4.0';
+export const VERSION = '0.4.2';
 
 import * as nconf from 'nconf';
 import * as fs from 'fs';
@@ -88,6 +88,7 @@ async function doStartup () {
     // debug.info('delay for start' + VERSION);
     // await Gpio.delayMillis(5000);
     debug.info('Start hwc-webserver-ngx V' + VERSION);
+    debug.info('Executed from: %s', __dirname);
     try {
         if (nconf.get('git')) {
             const gitInfo = await git.getGitInfo();

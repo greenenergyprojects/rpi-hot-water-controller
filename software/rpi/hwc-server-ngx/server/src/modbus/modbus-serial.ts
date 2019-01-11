@@ -23,6 +23,7 @@ export class ModbusSerial {
     private _config: IModbusSerialConfig;
     private _devices: ModbusSerialDevice [];
     private _serialPort: SerialPort;
+    private _lockedBy: string;
     private _receive: { frames: boolean, chars: boolean } = { frames: false, chars: false };
     private _openPromise: { resolve: () => void, reject: (err: Error) => void};
     private _frame: string;
@@ -98,6 +99,7 @@ export class ModbusSerial {
     public async send (request: ModbusRequestFactory, timeoutMillis: number): Promise<ModbusRequest> {
         debug.fine('send request, timeoutMillis=%s', timeoutMillis);
         if (!this._serialPort || this._openPromise) { throw new Error('serialPort not open'); }
+        if (this._lockedBy) { throw new Error('serial port locked by ' + this._lockedBy); }
         if (timeoutMillis <= 0) { throw new Error('invalid value for timeoutMillis'); }
         return new Promise<ModbusRequest>( (res, rej) => {
             const x: IPendingRequest = {
@@ -123,6 +125,28 @@ export class ModbusSerial {
             debug.info('no devices known -> skip resetTargets');
             return;
         }
+
+        debug.info('resetTargets() -> %d pending jobs to cancel', this._pending.length);
+        while (this._pending.length > 0) {
+            const pendingJob = this._pending.splice(0, 1)[0];
+            if (pendingJob.timer) {
+                clearTimeout(pendingJob.timer);
+                pendingJob.timer = null;
+            }
+            if (pendingJob.timerModbus) {
+                clearTimeout(pendingJob.timerModbus);
+                pendingJob.timerModbus = null;
+            }
+            const err = new Error('request cancelled by resetTargets');
+            if (pendingJob.requ) {
+                pendingJob.requ.error = err;
+            }
+            process.nextTick( () => {
+                pendingJob.reject(err);
+            });
+        }
+        this._lockedBy = 'resetTargets';
+
         const proms: Promise<ModbusRequest | IResetRequest> [] = [];
         for (const d of this._devices) {
             if (!d.config.reset) {
@@ -151,7 +175,12 @@ export class ModbusSerial {
                 proms.push(p);
             }
         }
-        await Promise.all(proms);
+        try {
+            await Promise.all(proms);
+        } finally {
+            this._lockedBy = null;
+        }
+
     }
 
     private async resetTarget(req: IPendingRequest) {
@@ -256,12 +285,15 @@ export class ModbusSerial {
             debug.finer('handleError(): removing pending request, length = %s', this._pending.length);
         }
         this._errCnt++;
-        if (this._errCnt > 10) {
+        if (this._errCnt >= 10) {
+            this._errCnt = 0;
             debug.warn('modbus serial seems to be down, reset target now');
-            this.resetTargets(false).then( () => {
-                debug.info('targets reseted');
-            }).catch( (er) => {
-                debug.warn('reset target fails\n%e', err);
+            process.nextTick( () => {
+                this.resetTargets(false).then( () => {
+                    debug.info('resetTargets() done successfully');
+                }).catch( (er) => {
+                    debug.warn(new ModbusSerialError('resetTargets() fails', err));
+                });
             });
         } else if (this._errCnt > 5) {
             debug.warn('modbus serial not working');
@@ -421,4 +453,8 @@ interface IPendingRequest {
     timerModbus: NodeJS.Timer;
     resolve: (requ: IResetRequest | ModbusRequest) => void;
     reject: (error: any) => void;
+}
+
+class ModbusSerialError extends Error {
+    constructor (msg: string, public cause: Error) { super(msg); }
 }
