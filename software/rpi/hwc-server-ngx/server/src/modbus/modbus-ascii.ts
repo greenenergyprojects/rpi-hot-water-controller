@@ -125,8 +125,8 @@ export class ModbusAscii { // implements ModbusSerial {
                             debug.finer('Valid modbus frame received: %s', this.frameAsDebugString(f.frame));
                         }
                     } else {
-                        if (debug.fine.enabled) {
-                            debug.fine('Modbus frame with LRC error received: %s', this.frameAsDebugString(f.frame));
+                        if (debug.finer.enabled) {
+                            debug.finer('Modbus frame with LRC error received: %s', this.frameAsDebugString(f.frame));
                         }
                     }
                     this.handleFrame(f);
@@ -139,7 +139,7 @@ export class ModbusAscii { // implements ModbusSerial {
     }
 
     private frameAsDebugString (frame: string): string {
-        if (debug.fine.enabled) {
+        if (debug.finer.enabled) {
             return '(' + frame.length + ' bytes)\n' + frame;
         } else {
             return '(' + frame.length + ' bytes): ' + frame.substr(0, 16) + '...';
@@ -460,9 +460,9 @@ export class ModbusAsciiMonitor  extends ModbusAsciiStatus {
                     s = s + '  ' + a + '=' + this[a];
                 }
             }
-            debug.fine(s);
+            debug.finer(s);
         } else {
-            debug.fine(s);
+            debug.finer(s);
         }
     }
 

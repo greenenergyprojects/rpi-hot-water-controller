@@ -1,6 +1,6 @@
 
 import * as debugsx from 'debug-sx';
-const debug: debugsx.IDefaultLogger = debugsx.createDefaultLogger('server');
+const debug: debugsx.IFullLogger = debugsx.createFullLogger('server');
 
 import * as path from 'path';
 import * as fs from 'fs';
@@ -19,6 +19,7 @@ import { Router } from './routers/router';
 interface IServerConfig {
     start: boolean;
     port: number;
+    pin?: string;
     morgan: {
         disabled?: boolean,
         config?: string
@@ -27,14 +28,15 @@ interface IServerConfig {
 
 export class Server {
 
-    private static _instance: Server;
-
-    public static get Instance (): Server {
+    public static getInstance (): Server {
         if (Server._instance === undefined) {
             Server._instance = new Server();
         }
         return Server._instance;
     }
+
+    private static _instance: Server;
+
 
     // ************************************************
 
@@ -89,7 +91,7 @@ export class Server {
             debug.info('Server gestartet: http://localhost:%s', this._config.port);
         });
         server.on('connection', socket => {
-            debug.fine('Connection established: %s:%s', socket.remoteAddress, socket.remotePort);
+            debug.finer('Connection established: %s:%s', socket.remoteAddress, socket.remotePort);
             // socket.destroy();
         });
         server.on('close', () => {
@@ -100,6 +102,15 @@ export class Server {
         });
         this._server = server;
     }
+
+    public isPinOK (pin: string): boolean {
+        if (!this._config || !this._config.pin || pin !== this._config.pin) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
 
     private handleNotFound (req: express.Request, res: express.Response, next: express.NextFunction) {
         handleError(new NotFoundError(req.path), req, res, next, debug);

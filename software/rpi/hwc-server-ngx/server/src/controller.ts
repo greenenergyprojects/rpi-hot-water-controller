@@ -1,6 +1,6 @@
 
 import * as debugsx from 'debug-sx';
-const debug: debugsx.IDefaultLogger = debugsx.createDefaultLogger('controller');
+const debug: debugsx.IFullLogger = debugsx.createFullLogger('controller');
 
 import * as nconf from 'nconf';
 
@@ -108,14 +108,11 @@ export class Controller {
         const oldMode = this._mode;
         this._mode = <ControllerMode>value;
         if (oldMode !== this._mode) {
-            debug.fine('set new mode %s', this._mode);
+            debug.finer('set new mode %s', this._mode);
         }
     }
 
     public async setBoilerMode (bm: BoilerMode, from: string): Promise<IBoilerController> {
-        if (bm.pin !== '1234') {
-            throw new Error('invalid pin');
-        }
         this._mode = bm.desiredMode;
         this._setpointPower = new Value({
             createdAt: Date.now(),
@@ -164,22 +161,22 @@ export class Controller {
         const ps = new PowerSetting(value);
         if (!this.powerSetting.equals(ps, false)) {
             this._powerSetting = ps;
-            debug.fine('set new power settings (%o)', this._powerSetting);
+            debug.finer('set new power settings (%o)', this._powerSetting);
         }
     }
 
     public set setpointPower (value: Value) {
         this._setpointPower = value;
-        debug.fine('set new setpointPower (%o)', this._setpointPower.toObject());
+        debug.finer('set new setpointPower (%o)', this._setpointPower.toObject());
     }
 
     public set maxPower (value: Value) {
         this._maxPower = value;
-        debug.fine('set new maxPower (%o)', this._maxPower.toObject());
+        debug.finer('set new maxPower (%o)', this._maxPower.toObject());
     }
 
     public async refresh () {
-        debug.fine('refresh');
+        debug.finer('refresh');
         const hwctrl = HotWaterController.getInstance();
         if (this._mode === ControllerMode.off) {
             await hwctrl.writeActivePower(0);
@@ -190,12 +187,12 @@ export class Controller {
             if (!(p >= 0) && (p <= 2000)) {
                 throw new Error('setpointPower out of range, skip setting power');
             }
-            debug.fine('refresh mode test -> writeActivePower(%s)', p);
+            debug.finer('refresh mode test -> writeActivePower(%s)', p);
             await hwctrl.writeActivePower(p);
-            debug.fine('refresh mode test -> refresh');
+            debug.finer('refresh mode test -> refresh');
             await hwctrl.refresh();
             this._activePower = hwctrl.activePower;
-            debug.fine('refresh mode test -> activePower = %s', this._activePower.value);
+            debug.finer('refresh mode test -> activePower = %s', this._activePower.value);
         }  else if (this._mode === ControllerMode.power) {
             const p = this._setpointPower.value;
             const max = this._maxPower.value;

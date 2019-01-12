@@ -98,7 +98,7 @@ export class Monitor {
     public async refresh (): Promise<MonitorRecord> {
         const hwc = HotWaterController.getInstance();
         // await hwc.refresh();
-        debug.fine('current read done -> %s', sprintf('%.1f%s', hwc.current4To20mA.value, hwc.current4To20mA.unit));
+        debug.finer('current read done -> %s', sprintf('%.1f%s', hwc.current4To20mA.value, hwc.current4To20mA.unit));
         const ctrl = Controller.getInstance();
         const rData: IMonitorRecord = {
             createdAt: Date.now(),
@@ -118,7 +118,7 @@ export class Monitor {
         if (this._lastRecord) {
             const dayHasChanged =  this._lastRecord.createdAt.getDay() !==  new Date().getDay();
             if (dayHasChanged) {
-                debug.fine('day has changed -> reset energyDaily');
+                debug.finer('day has changed -> reset energyDaily');
                 this._energyDaily = 0;
             }
             const dt = +rData.createdAt - this._lastRecord.createdAt.getTime();
@@ -201,7 +201,7 @@ export class Monitor {
                 if (err) {
                     debug.warn('tempFile error\n%e', err);
                 } else if (debug.fine.enabled) {
-                    debug.fine('temp file ' + fn + ' written');
+                    debug.finer('temp file ' + fn + ' written');
                 }
             } );
 
@@ -213,7 +213,7 @@ export class Monitor {
 
     private async handleTimerEvent () {
         try {
-            debug.fine('handleTimerEvent');
+            debug.finer('handleTimerEvent');
             await this.refresh();
         } catch (err) {
             debug.warn('%e', err);

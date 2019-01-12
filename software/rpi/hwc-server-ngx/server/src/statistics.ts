@@ -103,7 +103,7 @@ export class Statistics {
         if (this._handleMonitorRecordCount === 0) {
             debug.warn('no monitor records received, cannot continue statistics!');
         } else {
-            debug.fine('%d monitor records processed, history-size=%d', this._handleMonitorRecordCount, this._history.length);
+            debug.finer('%d monitor records processed, history-size=%d', this._handleMonitorRecordCount, this._history.length);
             this._handleMonitorRecordCount = 0;
             if (this._current) {
                 this._history.push(this._current);

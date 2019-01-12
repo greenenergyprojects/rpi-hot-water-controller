@@ -107,7 +107,7 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
         }
         value = value * 2048;
         const requ =  ModbusRequestFactory.createWriteHoldRegister(this.config.slaveAddress, id + 1, value);
-        debug.fine('current4To20mA: write setpoint %d', value);
+        debug.finer('current4To20mA: write setpoint %d', value);
         const mr = await this.serial.send(requ, this.config.timeoutMillis);
     }
 

@@ -15,6 +15,7 @@ import { Controller } from '../controller';
 import { Value } from '../data/common/hwc/value';
 import { BoilerMode, IBoilerMode } from '../data/common/hwc/boiler-mode';
 import { SSL_OP_NETSCAPE_CA_DN_BUG } from 'constants';
+import { Server } from '../server';
 
 
 
@@ -69,6 +70,7 @@ export class Router {
             if (r) {
                 rv.push(r.toObject());
             }
+            // debug.fine('--> getMonitor():\n%o', rv);
             res.json(rv);
         } catch (err) {
             handleError(err, req, res, next, debug);
@@ -100,6 +102,7 @@ export class Router {
                     await c.refresh();
                 }
             }
+            debug.fine('--> Controller:\n%o', c);
             res.send({
                 mode: c.mode,
                 powerSetting: c.powerSetting.toObject(),
@@ -115,8 +118,11 @@ export class Router {
     private async postController (req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
             const c = Controller.getInstance();
+            debug.info('POST /controller...\n%o', req.body);
+            if (!req.body.pin) { throw new AuthenticationError('missing pin'); }
+            if (!Server.getInstance().isPinOK(req.body.pin)) { throw new AuthenticationError('wrong pin'); }
+            delete req.body.pin;
             const data: IBoilerMode = req.body;
-            debug.info('POST /controller...\n%o',data);
             const bm = new BoilerMode(data);
             const rv = await c.setBoilerMode(bm, 'POST /boilermode');
             debug.info('POST /controller => %o', rv);

@@ -97,7 +97,7 @@ export class ModbusSerial {
     }
 
     public async send (request: ModbusRequestFactory, timeoutMillis: number): Promise<ModbusRequest> {
-        debug.fine('send request, timeoutMillis=%s', timeoutMillis);
+        debug.finer('send request, timeoutMillis=%s', timeoutMillis);
         if (!this._serialPort || this._openPromise) { throw new Error('serialPort not open'); }
         if (this._lockedBy) { throw new Error('serial port locked by ' + this._lockedBy); }
         if (timeoutMillis <= 0) { throw new Error('invalid value for timeoutMillis'); }
@@ -126,6 +126,7 @@ export class ModbusSerial {
             return;
         }
 
+        this._lockedBy = 'resetTargets';
         debug.info('resetTargets() -> %d pending jobs to cancel', this._pending.length);
         while (this._pending.length > 0) {
             const pendingJob = this._pending.splice(0, 1)[0];
@@ -145,7 +146,6 @@ export class ModbusSerial {
                 pendingJob.reject(err);
             });
         }
-        this._lockedBy = 'resetTargets';
 
         const proms: Promise<ModbusRequest | IResetRequest> [] = [];
         for (const d of this._devices) {
@@ -175,12 +175,6 @@ export class ModbusSerial {
                 proms.push(p);
             }
         }
-        try {
-            await Promise.all(proms);
-        } finally {
-            this._lockedBy = null;
-        }
-
     }
 
     private async resetTarget(req: IPendingRequest) {
@@ -195,6 +189,7 @@ export class ModbusSerial {
             return;
         }
         try {
+            this._lockedBy = 'resetTarget';
             this._receive.chars = false;
             this._receive.frames = false;
             const pin = '' + r.pin;
@@ -216,8 +211,35 @@ export class ModbusSerial {
             await Gpio.setPin(pin, !resetLevel);
             await Gpio.delayMillis(10);
             await Gpio.delayMillis(5000);
-            debug.info('reset done for target %s\n-->%s', d.name, this._receivedChars);
-            this.handleSuccess(req);
+            if (this._receivedChars.indexOf('uc1-bootloader') > 0) {
+                debug.info('reset done for target %s\n-->%s', d.name, this._receivedChars);
+                this._lockedBy = null;
+                this.handleSuccess(req);
+            } else {
+                debug.warn('reset fails -> no valid response from target %s\n-->%s', d.name, this._receivedChars);
+                debug.info('reset target 2nd time: setting GPio pins', d.name);
+                await Gpio.delayMillis(1000);
+                await Gpio.setup(pin, 'OUT');
+                await Gpio.setPin(pin, !resetLevel);
+                await Gpio.delayMillis(1000);
+                debug.info('reset target 2nd time: more time to create signals', d.name);
+                this._receivedChars = '';
+                this._receive.chars = true;
+                await Gpio.setPin(pin, !resetLevel);
+                await Gpio.delayMillis(100);
+                await Gpio.setPin(pin, resetLevel);
+                await Gpio.delayMillis(100);
+                await Gpio.setPin(pin, !resetLevel);
+                await Gpio.delayMillis(100);
+                await Gpio.delayMillis(7000);
+                if (this._receivedChars.indexOf('uc1-bootloader') > 0) {
+                    debug.info('reset done for target %s\n-->%s', d.name, this._receivedChars);
+                    this.handleSuccess(req);
+                } else {
+                    debug.warn('reset fails for target %s\n-->%s', d.name, this._receivedChars);
+                }
+                this._lockedBy = null;
+            }
         } catch (err) {
             debug.warn('reset fails for target %s\%e', d.name, err);
             this.handleError(req, err);

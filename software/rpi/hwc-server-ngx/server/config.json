@@ -2,6 +2,7 @@
     "server": {
         "start": true,
         "port": 8080,
+        "pin": "1234",
         "morgan": {
             "disabled": true,
             "config": "tiny"

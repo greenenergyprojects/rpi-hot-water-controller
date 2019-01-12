@@ -1,4 +1,4 @@
-export const VERSION = '0.4.2';
+export const VERSION = '0.4.5';
 
 import * as nconf from 'nconf';
 import * as fs from 'fs';
@@ -42,7 +42,7 @@ for (const a in debugConfig) {
 
 // logging with debug-sx/debug
 import * as debugsx from 'debug-sx';
-const debug: debugsx.IDefaultLogger = debugsx.createDefaultLogger('main');
+const debug: debugsx.IFullLogger = debugsx.createFullLogger('main');
 
 // debugsx.addHandler(debugsx.createConsoleHandler('stdout'));
 debugsx.addHandler(debugsx.createRawConsoleHandler());
@@ -168,13 +168,13 @@ async function shutdown (src: string): Promise<void> {
     let rv = 0;
 
     try { await Controller.getInstance().shutdown(); } catch (err) { rv++; console.log(err); }
-    debug.fine('controller shutdown done');
+    debug.finer('controller shutdown done');
 
-    try { await Server.Instance.stop(); } catch (err) { rv++; console.log(err); }
-    debug.fine('monitor shutdown done');
+    try { await Server.getInstance().stop(); } catch (err) { rv++; console.log(err); }
+    debug.finer('monitor shutdown done');
 
     try { await monitor.shutdown(); } catch (err) { rv++; console.log(err); }
-    debug.fine('monitor shutdown done');
+    debug.finer('monitor shutdown done');
 
     for (const ms of modbusSerials) {
         try {
@@ -183,10 +183,10 @@ async function shutdown (src: string): Promise<void> {
             rv++; console.log(err);
         }
     }
-    debug.fine('modbusSerial shutdown done');
+    debug.finer('modbusSerial shutdown done');
 
     try { await Gpio.shutdown(); } catch (err) { rv++; console.log(err); }
-    debug.fine('gpio shutdown done');
+    debug.finer('gpio shutdown done');
 
     clearTimeout(timer);
     debug.info('shutdown successfully finished');
@@ -223,7 +223,7 @@ async function startupInSequence (): Promise<any []> {
 async function startupServer (): Promise<void> {
     const configServer = nconf.get('server');
     if (configServer && configServer.start) {
-        await Server.Instance.start();
+        await Server.getInstance().start();
     }
 }
 
