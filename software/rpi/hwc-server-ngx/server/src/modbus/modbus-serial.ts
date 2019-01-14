@@ -23,7 +23,7 @@ export class ModbusSerial {
     private _config: IModbusSerialConfig;
     private _devices: ModbusSerialDevice [];
     private _serialPort: SerialPort;
-    private _lockedBy: string;
+    private _lockedBy: string = null;
     private _receive: { frames: boolean, chars: boolean } = { frames: false, chars: false };
     private _openPromise: { resolve: () => void, reject: (err: Error) => void};
     private _frame: string;
@@ -43,6 +43,10 @@ export class ModbusSerial {
 
     public get device (): string {
         return this._config.device;
+    }
+
+    public get lockedBy (): string | null {
+        return this._lockedBy;
     }
 
     public async open (devices?: ModbusSerialDevice []) {
@@ -190,6 +194,7 @@ export class ModbusSerial {
         }
         try {
             this._lockedBy = 'resetTarget';
+            debug.fine('reset: set lockedBy to %s', this._lockedBy);
             this._receive.chars = false;
             this._receive.frames = false;
             const pin = '' + r.pin;
@@ -198,52 +203,60 @@ export class ModbusSerial {
             this._receivedChars = '';
             this._receive.chars = true;
             if (isOnStart) {
+                debug.fine('reset: isOnStart => setting mode OUT for pin %s', pin);
                 await Gpio.setup(pin, 'OUT');
                 await Gpio.setPin(pin, !resetLevel);
                 await Gpio.delayMillis(10);
             }
             this._receivedChars = '';
             this._receive.chars = true;
+            debug.fine('reset: starting reset sequence...');
             await Gpio.setPin(pin, !resetLevel);
             await Gpio.delayMillis(10);
             await Gpio.setPin(pin, resetLevel);
             await Gpio.delayMillis(10);
             await Gpio.setPin(pin, !resetLevel);
             await Gpio.delayMillis(10);
+            debug.fine('reset: starting reset sequence done, waiting fpr response...');
             await Gpio.delayMillis(5000);
             if (this._receivedChars.indexOf('uc1-bootloader') > 0) {
-                debug.info('reset done for target %s\n-->%s', d.name, this._receivedChars);
+                debug.info('reset: done (target %s)\n-->%s', d.name, this._receivedChars);
                 this._lockedBy = null;
                 this.handleSuccess(req);
             } else {
-                debug.warn('reset fails -> no valid response from target %s\n-->%s', d.name, this._receivedChars);
-                debug.info('reset target 2nd time: setting GPio pins', d.name);
-                await Gpio.delayMillis(1000);
-                await Gpio.setup(pin, 'OUT');
-                await Gpio.setPin(pin, !resetLevel);
-                await Gpio.delayMillis(1000);
-                debug.info('reset target 2nd time: more time to create signals', d.name);
+                debug.warn('reset: fails (target %s)\n-->%s', d.name, this._receivedChars);
+                debug.info('reset 2nd: start...');
                 this._receivedChars = '';
                 this._receive.chars = true;
+                await Gpio.delayMillis(500);
+                debug.fine('reset 2nd: pin %s to IN', pin);
+                await Gpio.setup(pin, 'IN');
+                await Gpio.delayMillis(1000);
+                debug.fine('reset 2nd: pin %s to OUT', pin);
+                await Gpio.setup(pin, 'OUT');
+                debug.fine('reset 2nd: pin %s = %s', pin, !resetLevel);
                 await Gpio.setPin(pin, !resetLevel);
-                await Gpio.delayMillis(100);
+                await Gpio.delayMillis(500);
+                debug.fine('reset 2nd: pin %s = %s', pin, resetLevel);
                 await Gpio.setPin(pin, resetLevel);
-                await Gpio.delayMillis(100);
+                await Gpio.delayMillis(500);
+                debug.fine('reset 2nd: pin %s = %s', pin, !resetLevel);
                 await Gpio.setPin(pin, !resetLevel);
-                await Gpio.delayMillis(100);
                 await Gpio.delayMillis(7000);
+                debug.fine('reset 2nd: checking received uart bytes');
                 if (this._receivedChars.indexOf('uc1-bootloader') > 0) {
-                    debug.info('reset done for target %s\n-->%s', d.name, this._receivedChars);
+                    debug.info('reset 2nd: done (target %s)\n-->%s', d.name, this._receivedChars);
                     this.handleSuccess(req);
                 } else {
-                    debug.warn('reset fails for target %s\n-->%s', d.name, this._receivedChars);
+                    debug.warn('reset 2nd: fails (target %s)\n-->%s', d.name, this._receivedChars);
                 }
-                this._lockedBy = null;
+                debug.fine('reset 2nd: remove lockedBy');
             }
         } catch (err) {
             debug.warn('reset fails for target %s\%e', d.name, err);
             this.handleError(req, err);
         } finally {
+            this._lockedBy = null;
             this._receive.chars = false;
             this._receivedChars = '';
             this._frame = '';
@@ -417,7 +430,7 @@ export class ModbusSerial {
                     try {  f = new ModbusAsciiFrame(this._frame); } catch (e) { err = err; }
                     this._frame = null;
                     if (!err && !f.lrcOk) {
-                        err = new Error('LRC/CRC error on request');
+                        debug.warn('LRC/CRC error on request (%s)', this._frame);
                     }
                     const r = this._pending[0];
                     if (!(r.requ instanceof ModbusRequest)) {

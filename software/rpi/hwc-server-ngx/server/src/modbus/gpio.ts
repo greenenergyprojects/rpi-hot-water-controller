@@ -1,10 +1,11 @@
 export class Gpio {
 
-    public static async setup (pin: string, direction: 'OUT') {
+    public static async setup (pin: string, direction: 'OUT' | 'IN') {
         return new Promise<void>( (res, rej) => {
             let d: any;
             switch (direction) {
                 case 'OUT': d = this.gpio.DIR_OUT; break;
+                case 'IN':  d = this.gpio.DIR_IN; break;
                 default: rej(new Error('invalid direction')); return;
             }
             this.gpio.setup(pin, d, (err: any) => {
