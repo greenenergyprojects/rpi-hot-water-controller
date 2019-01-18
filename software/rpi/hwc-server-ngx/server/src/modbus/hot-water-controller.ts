@@ -48,6 +48,7 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
     private _setpoint4To20mA: Value;
     private _current4To20mA: Value;
     private _activePower: Value;
+    private _energyMeter: { at: Date, timer: number, s0Count: number };
 
     private constructor (serial: ModbusSerial, config: IModbusSerialDeviceConfig) {
         super(serial, config);
@@ -55,6 +56,7 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
         this._setpoint4To20mA = this.createValue(Number.NaN, 'mA');
         this._current4To20mA = this.createValue(Number.NaN, 'mA');
         this._activePower = this.createValue(Number.NaN, 'W');
+        this._energyMeter = { at: new Date(), timer: 0xffff, s0Count: 0 };
     }
 
     public on (event: 'update', listener: (values: IHotWaterControllerValues) => void) {
@@ -72,23 +74,38 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
     }
 
     public async refresh () {
-        await this.readHoldRegister(1, 2);
+        await this.readHoldRegister(1, 5);
     }
 
     public async readHoldRegister(startAddress: number, quantity: number) {
         const requ =  ModbusRequestFactory.createReadHoldRegister(this.config.slaveAddress, startAddress, quantity);
         const mr = await this.serial.send(requ, this.config.timeoutMillis);
+        const energyMeter: { at: Date, timer: number, s0Count: number } = { at: new Date(), timer: null, s0Count: 0 };
         for (let i = 0; i < quantity; i++) {
-            const v = Math.round(mr.response.wordAt(3 + i * 2) / 2048 * 100) / 100;
+            const v = Math.round(mr.response.wordAt(3 + i * 2));
             switch ( startAddress + i) {
-                case 1: this._setpoint4To20mA = this.createValue(v, 'mA'); break;
+                case 1: this._setpoint4To20mA = this.createValue(Math.round(v / 2048 * 100) / 100, 'mA'); break;
                 case 2: {
-                    this._current4To20mA = this.createValue(v, 'mA' );
-                    this._activePower = this.createValue(this.currentMilliAmpsToPowerWatts(v), 'W' );
+                    this._current4To20mA = this.createValue(Math.round(v / 2048 * 100) / 100, 'mA' );
+                    // this._activePower = this.createValue(this.currentMilliAmpsToPowerWatts(v / 2048), 'W' );
                     break;
                 }
+                case 3: energyMeter.timer = v; break;
+                case 4: energyMeter.s0Count += (v * 65536); break;
+                case 5: energyMeter.s0Count += v; break;
                 default: debug.warn('hold register addr %d not handled', startAddress + i);
             }
+        }
+        debug.fine('---> energyMeter: %o', energyMeter);
+        if (energyMeter.timer >= 0 && energyMeter.timer <= 0xffff && energyMeter.s0Count >= 0) {
+            this._energyMeter = energyMeter;
+            if (this._energyMeter.timer === 0xffff) {
+                this._activePower = this.createValue(0, 'W');
+            } else {
+                this._activePower = this.createValue(250 * 3600 / this._energyMeter.timer, 'W');
+            }
+        } else {
+            this._activePower = this.createValue(Number.NaN, 'W');
         }
     }
 
@@ -131,6 +148,9 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
         return this._activePower;
     }
 
+    public get energyMeter (): { at: Date, timer: number, s0Count: number } {
+        return this._energyMeter;
+    }
 
     public toValuesObject (): IHotWaterControllerValues {
         const rv = {

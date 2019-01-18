@@ -12,7 +12,7 @@ import { Value } from './data/common/hwc/value';
 import { HotWaterController } from './modbus/hot-water-controller';
 import { BoilerController, IBoilerController } from './data/common/hwc/boiler-controller';
 
-interface IController {
+interface IControllerConfig {
     startMode: 'off' | 'power';
     powerSetting: {
         minWatts: number;
@@ -22,7 +22,7 @@ interface IController {
 }
 
 export class Controller {
-    public static async createInstance (config?: IController): Promise<Controller> {
+    public static async createInstance (config?: IControllerConfig): Promise<Controller> {
         this._instance = new Controller(config);
         await this._instance.init();
         return this._instance;
@@ -39,15 +39,17 @@ export class Controller {
 
     // ************************************************
 
-    private _config: IController;
+    private _config: IControllerConfig;
     private _mode: ControllerMode;
     private _powerSetting: PowerSetting;
     private _setpointPower: Value;
     private _maxPower: Value;
     private _activePower: Value;
+    private _energyDaily: Value;
+    private _energyTotal: Value;
     private _timer: NodeJS.Timer;
 
-    private constructor (config?: IController) {
+    private constructor (config?: IControllerConfig) {
         config = config || nconf.get('controller');
         if (!config) { throw new Error('missing config'); }
         if (DataRecord.enumToStringValues(ControllerMode).indexOf(config.startMode) < 0) {
@@ -75,9 +77,11 @@ export class Controller {
             setpointWatts = 0;
             maxWatts = 0;
         }
-        this._activePower = new Value({createdAt: Date.now(), createdFrom: 'controller:constructor', value: Number.NaN, unit: 'W'});
+
         this._setpointPower = new Value({createdAt: Date.now(), createdFrom: 'controller:constructor', value: setpointWatts, unit: 'W'});
         this._maxPower = new Value({createdAt: Date.now(), createdFrom: 'controller:constructor', value: maxWatts, unit: 'W'});
+        this._energyDaily = new Value({createdAt: Date.now(), createdFrom: 'controller:constructor', value: Number.NaN, unit: 'W'});
+        this._energyTotal = new Value({createdAt: Date.now(), createdFrom: 'controller:constructor', value: Number.NaN, unit: 'W'});
 
         this._config = config;
     }
@@ -141,6 +145,14 @@ export class Controller {
         return this._activePower;
     }
 
+    public get energyDaily (): Value {
+        return this._energyDaily;
+    }
+
+    public get energyTotal (): Value {
+        return this._energyTotal;
+    }
+
     public toObject (convertDate = false): IBoilerController {
         const rv: IBoilerController = {
             createdAt:     Date.now(),
@@ -148,7 +160,9 @@ export class Controller {
             powerSetting:  this._powerSetting.toObject(convertDate),
             activePower:   this._activePower.toObject(convertDate),
             setpointPower: this._setpointPower.toObject(convertDate),
-            maxPower:      this._maxPower.toObject(convertDate)
+            maxPower:      this._maxPower.toObject(convertDate),
+            energyDaily:   this._energyDaily.toObject(convertDate),
+            energyTotal:   this._energyTotal.toObject(convertDate),
         };
         return rv;
     }

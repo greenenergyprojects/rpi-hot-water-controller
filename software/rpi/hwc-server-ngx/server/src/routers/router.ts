@@ -103,13 +103,14 @@ export class Router {
                 }
             }
             debug.fine('--> Controller:\n%o', c);
-            res.send({
-                mode: c.mode,
-                powerSetting: c.powerSetting.toObject(),
-                activePower: c.activePower.toObject(),
-                setpointPower: c.setpointPower.toObject(),
-                maxPower: c.maxPower.toObject()
-            });
+            // res.send({
+            //     mode: c.mode,
+            //     powerSetting: c.powerSetting.toObject(),
+            //     activePower: c.activePower.toObject(),
+            //     setpointPower: c.setpointPower.toObject(),
+            //     maxPower: c.maxPower.toObject()
+            // });
+            res.send(c.toObject());
         } catch (err) {
             handleError(err, req, res, next, debug);
         }
