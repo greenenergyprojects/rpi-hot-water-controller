@@ -10,10 +10,13 @@
 struct ModbusAscii modbus_ascii;
 #define ma modbus_ascii
 
+void modbusAscii_handleFrame ();
+
 void modbusAscii_init () {
     memset((void *)&modbus_ascii, 0, sizeof(modbus_ascii));
     ma.version = 1;
-    ma.debugLevel = GLOBAL_DEBUG_LEVEL_FINE;
+    ma.debugLevel = GLOBAL_DEBUG_LEVEL_INFO;
+    // ma.debugLevel = GLOBAL_DEBUG_LEVEL_FINE;
 }
 
 void modbusAscii_main () {
@@ -28,6 +31,12 @@ void modbusAscii_main () {
     }
     if (sys_isSw2On() && errDetected) {
         memset((void *)&modbus_ascii.err, 0, sizeof(modbus_ascii.err));
+    }
+    if (sys_isEventPending(GLOBAL_EVENT_MODBUS_BUSY)) {
+        modbusAscii_handleFrame();
+        ma.bIndex = 0;
+        sys_clearEvent(GLOBAL_EVENT_MODBUS_BUSY);
+
     }
 }
 
@@ -88,7 +97,7 @@ void modbusAscii_handleFrame () {
     sys_setEvent(GLOBAL_EVENT_MODBUS_ASCII_FRAME);
     int8_t size = modbusAscii_hexBuffer2BinBuffer(&ma.buffer[1], &ma.buffer[0], ma.bIndex - 1);
     if (ma.debugLevel >= GLOBAL_DEBUG_LEVEL_FINE) {
-        printf("Request  :");
+        printf("Request (%02x) :", size);
         for (uint8_t i = 0; i < size; i++) { printf("%02X", ma.buffer[i]); }
         printf("\\r\\n\r\n");
     }
@@ -151,6 +160,11 @@ void modbusAscii_handleFrame () {
 
 void modbusAscii_handleModbusAsciiByte (char c) {
     static uint8_t isLastByteCR = 0;
+    
+    if (sys_isEventPending(GLOBAL_EVENT_MODBUS_BUSY)) {
+        sys_inc8BitCnt(&ma.err.byteWhileBusy);
+        return;
+    }
 
     if (ma.bIndex == 0 && c != ':') {
         if (ma.frameCnt > 0) {
@@ -166,11 +180,11 @@ void modbusAscii_handleModbusAsciiByte (char c) {
 
     } else if (c == '\n') {
         if (isLastByteCR && ma.bIndex % 2 == 1) {
-            modbusAscii_handleFrame();
+            sys_setEvent(GLOBAL_EVENT_MODBUS_BUSY);
         } else {
             sys_inc8BitCnt(&ma.err.invalidFrame);
+            ma.bIndex = 0;
         }
-        ma.bIndex = 0;
         isLastByteCR = 0;
         return;
 

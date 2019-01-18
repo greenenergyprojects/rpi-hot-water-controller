@@ -15,7 +15,9 @@ struct App {
     struct App_ErrCounter err;
     uint16_t setpoint4To20mAx2028;
     uint16_t curr4To20mAx2048;
-    uint8_t pwmLedTimer;
+    uint8_t  pwmLedTimer;
+    uint16_t sensor0Time;
+    uint32_t sensor0Cnt;
 };
 
 extern struct App app;
@@ -31,6 +33,7 @@ void app_main ();
 uint8_t  app_setSetpoint4To20mA (uint16_t value);
 uint16_t app_getSetpoint4To20mA ();
 uint16_t app_getCurr4To20mA ();
+uint32_t app_getSensor0Cnt ();
 
 
 void app_task_1ms   ();

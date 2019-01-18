@@ -28,7 +28,7 @@
 
 #define GLOBAL_EVENT_MODBUS_ASCII_FRAME 0x01
 #define GLOBAL_EVENT_MODBUS_ASCII_ERROR 0x02
-#define GLOBAL_EVENT_2                  0x04
+#define GLOBAL_EVENT_MODBUS_BUSY        0x04
 #define GLOBAL_EVENT_3                  0x08
 #define GLOBAL_EVENT_4                  0x10
 #define GLOBAL_EVENT_5                  0x20

@@ -22,6 +22,7 @@ struct App app;
 void app_init (void) {
     memset((void *)&app, 0, sizeof(app));
     app.version = 1;
+    app.sensor0Time = 0xffff;
 }
 
 
@@ -96,7 +97,6 @@ uint16_t app_getCurr4To20mA () {
 
 
 
-
 //--------------------------------------------------------
 
 void app_task_1ms (void) {
@@ -118,7 +118,30 @@ void app_task_1ms (void) {
     }
 }
 
-void app_task_2ms (void) {}
+void app_task_2ms (void) {
+    static uint8_t oldS0 = 0;
+    static uint16_t timer = 0;
+    if (timer < 5000) {
+        timer++;
+    } else {
+        app.sensor0Time = 0xffff;
+    }
+    if (sys_isSensor1On()) {
+        sys_setLedSensor1(1); // S0 Energymeter
+        oldS0 = 1;
+    } else {
+        sys_setLedSensor1(0);
+        if (oldS0 == 1) {
+            oldS0 = 0;
+            if (app.sensor0Cnt < 0xffffffff) {
+                app.sensor0Cnt++;
+            }
+            app.sensor0Time = timer;            
+            timer = 0;
+        }
+    }
+
+}
 
 void app_task_4ms (void) {
     if (test) {
@@ -151,9 +174,9 @@ void app_task_128ms (void) {
         sys_toggleLifeLed();
     }
     if (sys_clearEvent(GLOBAL_EVENT_MODBUS_ASCII_FRAME)) {
-        sys_setLedSensor1(1);
+        sys_setLedSensor2(1);
     } else {
-        sys_setLedSensor1(0);
+        sys_setLedSensor2(0);
     }
     if (sys_clearEvent(GLOBAL_EVENT_MODBUS_ASCII_ERROR)) {
         sys_setLedPT1000Red(0, 1);

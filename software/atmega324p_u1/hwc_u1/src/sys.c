@@ -52,7 +52,7 @@ void sys_init () {
     DDRA |= 0x08;          // LEDs: PT1000-2-g
     DDRB |= 0x0c;          // LEDs: SEN-1, SEN-2
     DDRB &= ~(1 << PB0);   // Sensor 2
-    DDRB &= ~(1 << PB1);   // Sensor 1
+    DDRB &= ~(1 << PB1);   // Sensor 1 / S0 Energymeter
     DDRB &= ~(1 << PB4);   // Switch SW2
     PORTB |= (1 << PB4);
     DDRC |= 0xc0;          // LEDs: PT1000-2-r, Life
@@ -85,14 +85,14 @@ void sys_init () {
     ADMUX = (1 << REFS1) | (0 << REFS0) | (1 << ADLAR) | 0;
     ADCSRA = (1 << ADEN) | 0x07;
 
-    // UART0
+    // UART0 (Mini USB)
     UBRR0L = (F_CPU/GLOBAL_UART0_BITRATE + 4)/8 - 1;
     UBRR0H = 0x00;
     UCSR0A = (1 << U2X0);
     UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);
     UCSR0B = (1 << RXCIE0) | (1 << TXEN0) | (1 << RXEN0);
 
-    // UART1
+    // UART1 (Modbus/RPI)
     UBRR1L = (F_CPU/GLOBAL_UART1_BITRATE + 4)/8 - 1;
     UBRR1H = 0x00;
     UCSR1A = (1 << U2X1);

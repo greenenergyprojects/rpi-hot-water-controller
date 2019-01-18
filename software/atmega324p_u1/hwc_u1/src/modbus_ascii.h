@@ -9,7 +9,8 @@ struct ModbusAsciiErrorCnt { // size word aligned !
     uint8_t invalidFrame;
     uint8_t frameOverflow;
     uint8_t lrcError;
-    uint8_t fillByte;
+    uint8_t byteWhileBusy;
+    
 };
 
 struct ModbusAscii {
