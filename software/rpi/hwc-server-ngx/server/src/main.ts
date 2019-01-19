@@ -1,4 +1,4 @@
-export const VERSION = '0.5.0';
+export const VERSION = '0.5.1';
 
 import * as nconf from 'nconf';
 import * as fs from 'fs';
@@ -215,6 +215,7 @@ async function startupInSequence (): Promise<any []> {
         p = ms.open(serialDevices[ms.device]); await p; rv.push(p);
     }
     p = Controller.createInstance(); await p; rv.push(p);
+    await Controller.getInstance().start();
     p = Monitor.createInstance(); monitor = await p; rv.push(p);
     debug.info('startupInSequence finished');
     return rv;

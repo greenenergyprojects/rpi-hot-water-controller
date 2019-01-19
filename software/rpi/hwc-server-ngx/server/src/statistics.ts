@@ -26,6 +26,7 @@ export class Statistics {
         { id: 'set-4to24mA', unit: 'mA', label: 'I-set/mA' },
         { id: 'curr-4to24mA', unit: 'mA', label: 'I-gemessen/mA' },
         { id: 'p-boiler', unit: 'W', label: 'P-Boiler/W' },
+        { id: 'e-total', unit: 'Wh', label: 'E-Total/Wh', hideMin: true, hideAvg: true, isSingleValue: false },
         { id: 'e-daily', unit: 'Wh', label: 'E-Tag/Wh', hideMin: true, hideAvg: true, isSingleValue: false }
 
     ];
@@ -280,8 +281,9 @@ class StatisticsRecordFactory extends StatisticsRecord {
             switch (h.id) {
                 case 'set-4to24mA':  this.handleValue(v, this._valueCount, r.current4to20mA.setpoint.value); break;
                 case 'curr-4to24mA': this.handleValue(v, this._valueCount, r.current4to20mA.current.value); break;
-                case 'p-boiler':     this.handleValue(v, this._valueCount, r.activePower.value); break;
-                case 'e-daily':      this.handleValue(v, this._valueCount, r.energyDaily.value); break;
+                case 'p-boiler':     this.handleValue(v, this._valueCount, r.controller.activePower); break;
+                case 'e-total':      this.handleValue(v, this._valueCount, r.controller.energyTotal); break;
+                case 'e-daily':      this.handleValue(v, this._valueCount, r.controller.energyDaily); break;
                 default: debug.warn('unsupported id %s', h.id); break;
             }
         }
@@ -367,6 +369,10 @@ class StatisticsRecordFactory extends StatisticsRecord {
                         break;
                     }
                     case 'p-boiler': {
+                        s += this.formatLineFragment(h, 0, v);
+                        break;
+                    }
+                    case 'e-total': {
                         s += this.formatLineFragment(h, 0, v);
                         break;
                     }

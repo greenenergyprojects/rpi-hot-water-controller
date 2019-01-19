@@ -96,13 +96,13 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
                 default: debug.warn('hold register addr %d not handled', startAddress + i);
             }
         }
-        debug.fine('---> energyMeter: %o', energyMeter);
+        // debug.fine('---> energyMeter: %o', energyMeter);
         if (energyMeter.timer >= 0 && energyMeter.timer <= 0xffff && energyMeter.s0Count >= 0) {
             this._energyMeter = energyMeter;
             if (this._energyMeter.timer === 0xffff) {
                 this._activePower = this.createValue(0, 'W');
             } else {
-                this._activePower = this.createValue(250 * 3600 / this._energyMeter.timer, 'W');
+                this._activePower = this.createValue(Math.round(250 * 3600 / this._energyMeter.timer * 10) / 10, 'W');
             }
         } else {
             this._activePower = this.createValue(Number.NaN, 'W');

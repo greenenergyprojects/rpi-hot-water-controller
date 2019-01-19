@@ -12,10 +12,8 @@ import { Monitor } from '../monitor';
 import { IMonitorRecord } from '../data/common/hwc/monitor-record';
 import { HotWaterController } from '../modbus/hot-water-controller';
 import { Controller } from '../controller';
-import { Value } from '../data/common/hwc/value';
-import { BoilerMode, IBoilerMode } from '../data/common/hwc/boiler-mode';
-import { SSL_OP_NETSCAPE_CA_DN_BUG } from 'constants';
 import { Server } from '../server';
+import { ControllerParameter, IControllerParameter } from '../data/common/hwc/controller-parameter';
 
 
 
@@ -38,9 +36,8 @@ export class Router {
     private constructor () {
         this._router = express.Router();
         this._router.get('/server/about', (req, res, next) => this.getServerAbout(req, res, next));
-        this._router.get('/data/monitor', (req, res, next) => this.getMonitor(req, res, next));
-        this._router.get('/controller', (req, res, next) => this.getController(req, res, next));
-        this._router.post('/controller', (req, res, next) => this.postController(req, res, next));
+        this._router.get('/monitor', (req, res, next) => this.getMonitor(req, res, next));
+        this._router.post('/controller/parameter', (req, res, next) => this.postControllerParameter(req, res, next));
     }
 
     private async getServerAbout (req: express.Request, res: express.Response, next: express.NextFunction) {
@@ -77,57 +74,57 @@ export class Router {
         }
     }
 
-    private async getController (req: express.Request, res: express.Response, next: express.NextFunction) {
-        try {
-            const c = Controller.getInstance();
-            if (req.query && Object.getOwnPropertyNames(req.query).length > 0) {
-                let doRefresh = false;
-                if (req.query.mode !== undefined) {
-                    try {
-                        c.setMode(req.query.mode);
-                        doRefresh = true;
-                    } catch (err) { throw new BadRequestError('invalid mode', err); }
-                }
-                if (req.query.power !== undefined) {
-                    const p = +req.query.power;
-                    if (!(p >= 0 && p <= 2000)) { throw new BadRequestError('invalid power'); }
-                    try {
-                        debug.info('GET /controller -> set power to %s', p);
-                        c.setpointPower = new Value({ createdAt: Date.now(), createdFrom: 'server GET /controller', value: p, unit: 'W' });
-                        doRefresh = true;
-                    } catch (err) { throw new BadRequestError('invalid power', err); }
-                }
-                if (doRefresh) {
-                    debug.info('GET /controller -> refresh');
-                    await c.refresh();
-                }
-            }
-            debug.fine('--> Controller:\n%o', c);
-            // res.send({
-            //     mode: c.mode,
-            //     powerSetting: c.powerSetting.toObject(),
-            //     activePower: c.activePower.toObject(),
-            //     setpointPower: c.setpointPower.toObject(),
-            //     maxPower: c.maxPower.toObject()
-            // });
-            res.send(c.toObject());
-        } catch (err) {
-            handleError(err, req, res, next, debug);
-        }
-    }
+    // private async getController (req: express.Request, res: express.Response, next: express.NextFunction) {
+    //     try {
+    //         const c = Controller.getInstance();
+    //         if (req.query && Object.getOwnPropertyNames(req.query).length > 0) {
+    //             let doRefresh = false;
+    //             if (req.query.mode !== undefined) {
+    //                 try {
+    //                     c.setMode(req.query.mode);
+    //                     doRefresh = true;
+    //                 } catch (err) { throw new BadRequestError('invalid mode', err); }
+    //             }
+    //             if (req.query.power !== undefined) {
+    //                 const p = +req.query.power;
+    //                 if (!(p >= 0 && p <= 2000)) { throw new BadRequestError('invalid power'); }
+    //                 try {
+    //                     debug.info('GET /controller -> set power to %s', p);
+    //                     c.setpointPower = new Value({ createdAt: Date.now(), createdFrom: 'server GET /controller', value: p, unit: 'W' });
+    //                     doRefresh = true;
+    //                 } catch (err) { throw new BadRequestError('invalid power', err); }
+    //             }
+    //             if (doRefresh) {
+    //                 debug.info('GET /controller -> refresh');
+    //                 await c.refresh();
+    //             }
+    //         }
+    //         debug.fine('--> Controller:\n%o', c);
+    //         // res.send({
+    //         //     mode: c.mode,
+    //         //     powerSetting: c.powerSetting.toObject(),
+    //         //     activePower: c.activePower.toObject(),
+    //         //     setpointPower: c.setpointPower.toObject(),
+    //         //     maxPower: c.maxPower.toObject()
+    //         // });
+    //         res.send(c.toObject());
+    //     } catch (err) {
+    //         handleError(err, req, res, next, debug);
+    //     }
+    // }
 
-    private async postController (req: express.Request, res: express.Response, next: express.NextFunction) {
+    private async postControllerParameter (req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
             const c = Controller.getInstance();
             debug.info('POST /controller...\n%o', req.body);
             if (!req.body.pin) { throw new AuthenticationError('missing pin'); }
             if (!Server.getInstance().isPinOK(req.body.pin)) { throw new AuthenticationError('wrong pin'); }
             delete req.body.pin;
-            const data: IBoilerMode = req.body;
-            const bm = new BoilerMode(data);
-            const rv = await c.setBoilerMode(bm, 'POST /boilermode');
+            const data: IControllerParameter = req.body;
+            // const p = new ControllerParameter(data);
+            const rv = await c.setParameter(data);
             debug.info('POST /controller => %o', rv);
-            res.send(rv);
+            res.send(rv.toObject());
         } catch (err) {
             handleError(err, req, res, next, debug);
         }

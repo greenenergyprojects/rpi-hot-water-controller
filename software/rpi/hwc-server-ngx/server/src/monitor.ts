@@ -24,6 +24,7 @@ export interface IMonitorConfig {
 interface ITempFileRecord {
     createdAt: Date;
     energyDaily: number;
+    energyTotal: number;
     monitorRecord: IMonitorRecord;
 }
 
@@ -58,7 +59,6 @@ export class Monitor {
     private _timer: NodeJS.Timer;
     private _lastTempCnt = 0;
     private _lastRecord: MonitorRecord;
-    private _energyDaily = 0;
 
     private constructor (config?: IMonitorConfig) {
         config = config || nconf.get('monitor');
@@ -100,14 +100,10 @@ export class Monitor {
         // await hwc.refresh();
         debug.finer('current read done -> %s', sprintf('%.1f%s', hwc.current4To20mA.value, hwc.current4To20mA.unit));
         const ctrl = Controller.getInstance();
+        const now = new Date();
         const rData: IMonitorRecord = {
-            createdAt: Date.now(),
-            mode: ctrl.mode,
-            powerSetting: ctrl.powerSetting.toObject(),
-            activePower: Controller.getInstance().activePower.toObject(),
-            setpointPower: ctrl.setpointPower.toObject(),
-            maxPower: ctrl.setpointPower.toObject(),
-            energy: [],
+            createdAt: now,
+            controller: Controller.getInstance().toObject(),
             current4to20mA: {
                 setpoint: hwc.setpoint4To20mA.toObject(),
                 current: hwc.current4To20mA.toObject()
@@ -115,24 +111,24 @@ export class Monitor {
         };
         debug.finer('%O', rData);
 
-        if (this._lastRecord) {
-            const dayHasChanged =  this._lastRecord.createdAt.getDay() !==  new Date().getDay();
-            if (dayHasChanged) {
-                debug.finer('day has changed -> reset energyDaily');
-                this._energyDaily = 0;
-            }
-            const dt = +rData.createdAt - this._lastRecord.createdAt.getTime();
-            if (dt > 10000) {
-                debug.warn('dt>10s (dt=%d) -> skip energy accumulation', sprintf('%.02fs', dt / 1000));
-            } else if (!(rData.activePower.value >= 0)) {
-                debug.warn('activePower unkown -> skip energy accumulation');
-            } else if (rData.activePower.unit !== 'W') {
-                debug.warn('wrong unit (' + rData.activePower.unit + ') on activePower -> skip energy accumulation');
-            } else {
-                this._energyDaily += rData.activePower.value * dt / 3600000;
-            }
-        }
-        rData.energyDaily = { createdAt: rData.createdAt, value: this._energyDaily, unit: 'Wh' };
+        // if (this._lastRecord) {
+        //     const dayHasChanged =  this._lastRecord.createdAt.getDay() !==  new Date().getDay();
+        //     if (dayHasChanged) {
+        //         debug.finer('day has changed -> reset energyDaily');
+        //         this._energyDaily = 0;
+        //     }
+        //     const dt = +rData.createdAt - this._lastRecord.createdAt.getTime();
+        //     if (dt > 10000) {
+        //         debug.warn('dt>10s (dt=%d) -> skip energy accumulation', sprintf('%.02fs', dt / 1000));
+        //     } else if (!(rData.activePower.value >= 0)) {
+        //         debug.warn('activePower unkown -> skip energy accumulation');
+        //     } else if (rData.activePower.unit !== 'W') {
+        //         debug.warn('wrong unit (' + rData.activePower.unit + ') on activePower -> skip energy accumulation');
+        //     } else {
+        //         this._energyDaily += rData.activePower.value * dt / 3600000;
+        //     }
+        // }
+        // rData.energyDaily = { createdAt: rData.createdAt, value: this._energyDaily, unit: 'Wh' };
 
         const r = new MonitorRecord(rData);
         debug.finer('monitor emits data: %o', r);
@@ -147,7 +143,7 @@ export class Monitor {
         if (this._config.disabled) { return; }
         if (this._config.tempFile && this._config.tempFile.path) {
             const backups = this._config.tempFile.backups > 0 ? this._config.tempFile.backups : 1;
-            let found: ITempFileRecord;
+            const found: ITempFileRecord [] = [];
             const now = new Date();
             let fn: string;
             for (let i = 0; i < backups; i++) {
@@ -156,25 +152,33 @@ export class Monitor {
                 try {
                     const s = fs.readFileSync(fn).toString('utf-8');
                     const o: ITempFileRecord = <ITempFileRecord>JSON.parse(s);
-                    if (o.energyDaily >= 0) {
-                        o.createdAt = new Date(o.createdAt);
-                        if (!found || found.createdAt < o.createdAt) {
-                            if (now.toDateString() === o.createdAt.toDateString()) {
-                                found = o;
-                            }
-                        }
+                    o.createdAt = new Date(o.createdAt);
+                    if (o.createdAt instanceof Date && o.energyDaily >= 0 && o.energyTotal >= 0) {
+                        found.push(o);
                     }
                 } catch (err) {
                     debug.warn('error on reading %s\n%e', fn, err);
                 }
             }
-            if (!found) {
+            if (found.length === 0) {
                 debug.warn('cannot find temporary file...');
-            } else if (found.energyDaily >= 0) {
-                debug.info('temporary file found, set energyDaily to ' + found.energyDaily);
-                this._energyDaily = found.energyDaily;
             } else {
-                debug.warn('missing energyDaily in file %s', fn);
+                let newest: ITempFileRecord;
+                for (const o of found) {
+                    if (!newest || newest.createdAt < o.createdAt) {
+                        newest = o;
+                    }
+                }
+                if (debug.finer.enabled) {
+                    debug.info('temporary file found\n%o', newest);
+                } else {
+                    debug.info('temporary file found');
+                }
+                const ctrl = Controller.getInstance();
+                ctrl.setEnergyTotal(newest.energyTotal);
+                if (newest.createdAt.toDateString() === now.toDateString()) {
+                    ctrl.setEnergyDaily(newest.createdAt, newest.energyDaily);
+                }
             }
         }
 
@@ -187,9 +191,15 @@ export class Monitor {
             return;
         }
         try {
+            const ctrl = Controller.getInstance();
+            const eDaily = ctrl.energyDaily;
+            if (!eDaily || !(eDaily.value >= 0) || eDaily.unit !== 'Wh') { throw new Error('invalid eDaily'); }
+            const eTotal = ctrl.energyTotal;
+            if (!eTotal || !(eTotal.value >= 0) || eTotal.unit !== 'Wh') { throw new Error('invalid eTotal'); }
             const t: ITempFileRecord = {
                 createdAt: new Date(),
-                energyDaily: Math.round(this._energyDaily * 100) / 100,
+                energyDaily: Math.round(eDaily.value * 100) / 100,
+                energyTotal: Math.round(eTotal.value),
                 monitorRecord: r.toObject()
             };
             const tOut = JSON.stringify(t, null, 2) + '\n';

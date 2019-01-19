@@ -5,15 +5,18 @@ const debug: debugsx.IFullLogger = debugsx.createFullLogger('controller');
 import * as nconf from 'nconf';
 
 import * as hwc from './data/common/hwc/monitor-record';
-import { ControllerMode, BoilerMode, IBoilerMode } from './data/common/hwc/boiler-mode';
-import { IPowerSetting, PowerSetting } from './data/common/hwc/power-setting';
 import { DataRecord } from './data/common/data-record';
-import { Value } from './data/common/hwc/value';
+// import { Value, IValue } from './data/common/hwc/value';
 import { HotWaterController } from './modbus/hot-water-controller';
-import { BoilerController, IBoilerController } from './data/common/hwc/boiler-controller';
+import { sprintf } from 'sprintf-js';
+import { ControllerParameter, IControllerParameter } from './data/common/hwc/controller-parameter';
+import { IControllerStatus, ControllerStatus } from './data/common/hwc/controller-status';
+
+import { ControllerMode } from './data/common/hwc/controller-mode';
+import { IValue } from './data/common/hwc/value';
 
 interface IControllerConfig {
-    startMode: 'off' | 'power';
+    startMode: 'off' | 'power' | 'test';
     powerSetting: {
         minWatts: number;
         maxWatts: number;
@@ -24,7 +27,6 @@ interface IControllerConfig {
 export class Controller {
     public static async createInstance (config?: IControllerConfig): Promise<Controller> {
         this._instance = new Controller(config);
-        await this._instance.init();
         return this._instance;
     }
 
@@ -39,14 +41,15 @@ export class Controller {
 
     // ************************************************
 
-    private _config: IControllerConfig;
-    private _mode: ControllerMode;
-    private _powerSetting: PowerSetting;
-    private _setpointPower: Value;
-    private _maxPower: Value;
-    private _activePower: Value;
-    private _energyDaily: Value;
-    private _energyTotal: Value;
+    private _config:        IControllerConfig;
+    private _parameter:     ControllerParameter;
+    private _mode:          ControllerMode;
+    private _setpointPower: number;
+    private _activePower:   number;
+    private _energyDaily:   number;
+    private _energyTotal:   number;
+
+    private _lastRefresh: { at: Date, activePower: number };
     private _timer: NodeJS.Timer;
 
     private constructor (config?: IControllerConfig) {
@@ -57,175 +60,165 @@ export class Controller {
         }
         this._mode = <ControllerMode>config.startMode;
         if (config.powerSetting) {
-            const psCfg: IPowerSetting = {
-                createdAt: Date.now(),
-                createdFrom: 'config',
-                minWatts: config.powerSetting.minWatts,
-                maxWatts: config.powerSetting.maxWatts,
-                desiredWatts: config.powerSetting.desiredWatts
-            };
-            this._powerSetting = new PowerSetting(psCfg);
-        }
-        let setpointWatts, maxWatts;
-        if (this._mode === ControllerMode.off || this._mode === ControllerMode.test) {
-            setpointWatts = 0;
-            maxWatts = this._powerSetting.maxWatts;
-        } else if (this._mode === ControllerMode.power) {
-            setpointWatts = this._powerSetting.desiredWatts;
-            maxWatts = this._powerSetting.maxWatts;
-        } else {
-            setpointWatts = 0;
-            maxWatts = 0;
+            let startMode: ControllerMode;
+            switch (config.startMode) {
+                case 'off':   startMode = ControllerMode.off; break;
+                case 'power': startMode = ControllerMode.power; break;
+                case 'test':  startMode = ControllerMode.test; break;
+                default: throw new Error('invalid mode ' + config.startMode);
+            }
+            this._parameter = new ControllerParameter({
+                createdAt:    new Date(),
+                from:        'config',
+                mode:         startMode,
+                desiredWatts: config.powerSetting.desiredWatts,
+                minWatts:     config.powerSetting.minWatts,
+                maxWatts:     config.powerSetting.maxWatts
+            });
         }
 
-        this._setpointPower = new Value({createdAt: Date.now(), createdFrom: 'controller:constructor', value: setpointWatts, unit: 'W'});
-        this._maxPower = new Value({createdAt: Date.now(), createdFrom: 'controller:constructor', value: maxWatts, unit: 'W'});
-        this._energyDaily = new Value({createdAt: Date.now(), createdFrom: 'controller:constructor', value: Number.NaN, unit: 'W'});
-        this._energyTotal = new Value({createdAt: Date.now(), createdFrom: 'controller:constructor', value: Number.NaN, unit: 'W'});
+        this._activePower = 0;
+        this._energyDaily = 0;
+        this._energyTotal = 0;
 
         this._config = config;
     }
 
+    public async start () {
+        if (this._timer) { throw new Error('controller already running'); }
+        this._timer = setInterval( () => this.handleTimer(), 1000);
+        // await this.refresh();
+    }
 
     public async shutdown () {
-        if (this._timer) {
-            clearInterval(this._timer);
-            this._timer = null;
-            this._mode = ControllerMode.shutdown;
-        }
+        if (!this._timer) { throw new Error('controller not running'); }
+        clearInterval(this._timer);
+        this._timer = null;
+        this._mode = ControllerMode.shutdown;
     }
+
+    public toObject (convertDate = false): IControllerStatus {
+        return this.getStatus().toObject(convertDate);
+    }
+
+    public getStatus (): ControllerStatus {
+        return new ControllerStatus({
+            createdAt:   Date.now(),
+            parameter:   this._parameter.toObject(),
+            mode:        this._mode,
+            activePower: this._activePower,
+            energyDaily: this._energyDaily,
+            energyTotal: this._energyTotal
+        });
+    }
+
 
     public get mode (): ControllerMode {
         return this._mode;
     }
 
-    public setMode (value: string) {
-        if (this._mode === ControllerMode.shutdown)  {
-            throw new Error('controller in mode shutdown');
-        }
-        if (DataRecord.enumToStringValues(ControllerMode).indexOf(value) < 0) {
-            throw new Error('illegal value ("' + value + '")');
-        }
-        if (value === ControllerMode.shutdown) {
-            throw new Error('shutdown mode cannot be set');
-        }
-        const oldMode = this._mode;
-        this._mode = <ControllerMode>value;
-        if (oldMode !== this._mode) {
-            debug.finer('set new mode %s', this._mode);
-        }
+    public get activePower (): IValue {
+        return { createdAt: Date.now(), createdFrom: 'controller', value: this._activePower, unit: 'W' };
     }
 
-    public async setBoilerMode (bm: BoilerMode, from: string): Promise<IBoilerController> {
-        this._mode = bm.desiredMode;
-        this._setpointPower = new Value({
-            createdAt: Date.now(),
-            createdFrom: from,
-            value: bm.setpointPower,
-            unit: 'W'
-        });
+    public get energyDaily (): IValue {
+        return { createdAt: Date.now(), createdFrom: 'controller', value: this._energyDaily, unit: 'Wh' };
+    }
+
+    public get energyTotal (): IValue {
+        return { createdAt: Date.now(), createdFrom: 'controller', value: this._energyTotal, unit: 'Wh' };
+    }
+
+    public async setParameter (p: IControllerParameter): Promise<ControllerStatus> {
+        this._parameter = new ControllerParameter(p);
         await this.refresh();
-        return this.toObject();
-     }
-
-
-    public get powerSetting (): PowerSetting {
-        return this._powerSetting;
+        return this.getStatus();
     }
 
-    public get setpointPower (): Value {
-        return this._setpointPower;
+    public setEnergyTotal (value: number) {
+        if (this._lastRefresh) { throw new Error('energyTotal cannot be set if energy accumulation is in progress'); }
+        this._energyTotal = value;
     }
 
-    public get maxPower (): Value {
-        return this._maxPower;
-    }
-
-    public get activePower (): Value {
-        return this._activePower;
-    }
-
-    public get energyDaily (): Value {
-        return this._energyDaily;
-    }
-
-    public get energyTotal (): Value {
-        return this._energyTotal;
-    }
-
-    public toObject (convertDate = false): IBoilerController {
-        const rv: IBoilerController = {
-            createdAt:     Date.now(),
-            mode:          this._mode,
-            powerSetting:  this._powerSetting.toObject(convertDate),
-            activePower:   this._activePower.toObject(convertDate),
-            setpointPower: this._setpointPower.toObject(convertDate),
-            maxPower:      this._maxPower.toObject(convertDate),
-            energyDaily:   this._energyDaily.toObject(convertDate),
-            energyTotal:   this._energyTotal.toObject(convertDate),
-        };
-        return rv;
-    }
-
-
-    public setPowerSetting (value: IPowerSetting) {
-        if (this._mode === ControllerMode.shutdown)  {
-            throw new Error('controller in mode shutdown');
-        }
-        const ps = new PowerSetting(value);
-        if (!this.powerSetting.equals(ps, false)) {
-            this._powerSetting = ps;
-            debug.finer('set new power settings (%o)', this._powerSetting);
-        }
-    }
-
-    public set setpointPower (value: Value) {
-        this._setpointPower = value;
-        debug.finer('set new setpointPower (%o)', this._setpointPower.toObject());
-    }
-
-    public set maxPower (value: Value) {
-        this._maxPower = value;
-        debug.finer('set new maxPower (%o)', this._maxPower.toObject());
+    public setEnergyDaily (at: Date, value: number) {
+        if (this._lastRefresh) { throw new Error('energyTotal cannot be set if energy accumulation is in progress'); }
+        this._lastRefresh = { at: at, activePower: null };
+        this._energyDaily = value;
     }
 
     public async refresh () {
         debug.finer('refresh');
-        const hwctrl = HotWaterController.getInstance();
-        if (this._mode === ControllerMode.off) {
-            await hwctrl.writeActivePower(0);
-            await hwctrl.refresh();
-            this._activePower = hwctrl.activePower;
-        } else if (this._mode === ControllerMode.test) {
-            const p = this._setpointPower.value;
-            if (!(p >= 0) && (p <= 2000)) {
-                throw new Error('setpointPower out of range, skip setting power');
+
+        switch (this._parameter.mode) {
+            case 'off': {
+                this._mode = ControllerMode.off;
+                this._setpointPower = 0;
+                break;
             }
-            debug.finer('refresh mode test -> writeActivePower(%s)', p);
-            await hwctrl.writeActivePower(p);
-            debug.finer('refresh mode test -> refresh');
-            await hwctrl.refresh();
-            this._activePower = hwctrl.activePower;
-            debug.finer('refresh mode test -> activePower = %s', this._activePower.value);
-        }  else if (this._mode === ControllerMode.power) {
-            const p = this._setpointPower.value;
-            const max = this._maxPower.value;
-            if (max >= 0 && p >= 0 && p <= 2000) {
-                await hwctrl.writeActivePower(Math.min(p, max));
-                await hwctrl.refresh();
-                this._activePower = hwctrl.activePower;
+
+            case 'power': {
+                this._mode = ControllerMode.power;
+                this._setpointPower = this._parameter.desiredWatts;
+                break;
             }
-        } else {
-            await hwctrl.refresh();
-            this._activePower = hwctrl.activePower;
-            throw new Error('unsupported mode');
+
+            case 'test': {
+                this._mode = ControllerMode.test;
+                this._setpointPower = 0;
+                break;
+            }
         }
 
+        if (this._setpointPower < this._parameter.minWatts) {
+            this._setpointPower = this._parameter.minWatts;
+        }
+        if (this._setpointPower > this._parameter.maxWatts) {
+            this._setpointPower = this._parameter.maxWatts;
+        }
+
+        const hwctrl = HotWaterController.getInstance();
+        await hwctrl.writeActivePower(this._setpointPower);
+        await hwctrl.refresh();
+
+        if (hwctrl.activePower.unit === 'W') {
+            this._activePower = hwctrl.activePower.value;
+        } else {
+            debug.warn('invalid activePower from HotWaterController (%o), using 0W instead', hwctrl.activePower);
+            this._activePower = 0;
+        }
+
+        if (!(this._activePower >= 0 && this._activePower <= 2500)) {
+            debug.warn('invalid value for activPower (%o), using 0 instead', this._activePower);
+            this._activePower = 0;
+        }
+        if (!(this._energyDaily >= 0)) {
+            debug.warn('invalid value for energyDaily (%o) -> reset to 0', this._energyDaily);
+            this._energyDaily = 0;
+        }
+        if (!(this._energyTotal >= 0)) {
+            debug.warn('invalid value for energyTotal (%o) -> reset to 0', this._energyTotal);
+            this._energyTotal = 0;
+        }
+
+        const now = new Date();
+        if (this._lastRefresh) {
+            if (this._lastRefresh.at.getDate() !== now.getDate()) {
+                debug.info('change of day, setting energyDaily from %fWh -> 0Wh', this._energyDaily);
+                this._energyDaily = 0;
+            }
+            const dt = now.getTime() - this._lastRefresh.at.getTime();
+            if (dt > 10000) {
+                debug.warn('dt>10s (dt=%d) -> skip energy accumulation', sprintf('%.02fs', dt / 1000));
+            } else if (!(this._activePower >= 0)) {
+                debug.warn('activePower unkown -> skip energy accumulation');
+            } else if (this._lastRefresh.activePower >= 0) {
+                this._energyDaily += (this._activePower + this._lastRefresh.activePower) / 2 * dt / 3600000;
+                this._energyTotal += (this._activePower + this._lastRefresh.activePower) / 2 * dt / 3600000;
+            }
+        }
+        this._lastRefresh = { at: now, activePower: this._activePower };
     }
 
-    private async init () {
-        this._timer = setInterval( () => this.handleTimer(), 1000);
-    }
 
     private async handleTimer () {
         try {
@@ -234,9 +227,5 @@ export class Controller {
             debug.warn('%e', err);
         }
     }
-
-
-
-
 
 }
