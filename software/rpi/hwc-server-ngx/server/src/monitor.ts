@@ -9,11 +9,11 @@ import * as path from 'path';
 import { sprintf } from 'sprintf-js';
 import * as nconf from 'nconf';
 import { MonitorRecord, IMonitorRecord } from './data/common/hwc/monitor-record';
-import { ModbusDevice } from './modbus/modbus-device';
 import { HotWaterController } from './modbus/hot-water-controller';
-import { runInThisContext } from 'vm';
 import { Statistics } from './statistics';
 import { Controller } from './controller';
+import { IControllerStatus } from './data/common/hwc/controller-status';
+import { SmartModeValues } from './data/common/hwc/smart-mode-values';
 
 export interface IMonitorConfig {
     disabled?: boolean;
@@ -25,6 +25,7 @@ interface ITempFileRecord {
     createdAt: Date;
     energyDaily: number;
     energyTotal: number;
+    controllerStatus: IControllerStatus;
     monitorRecord: IMonitorRecord;
 }
 
@@ -111,25 +112,6 @@ export class Monitor {
         };
         debug.finer('%O', rData);
 
-        // if (this._lastRecord) {
-        //     const dayHasChanged =  this._lastRecord.createdAt.getDay() !==  new Date().getDay();
-        //     if (dayHasChanged) {
-        //         debug.finer('day has changed -> reset energyDaily');
-        //         this._energyDaily = 0;
-        //     }
-        //     const dt = +rData.createdAt - this._lastRecord.createdAt.getTime();
-        //     if (dt > 10000) {
-        //         debug.warn('dt>10s (dt=%d) -> skip energy accumulation', sprintf('%.02fs', dt / 1000));
-        //     } else if (!(rData.activePower.value >= 0)) {
-        //         debug.warn('activePower unkown -> skip energy accumulation');
-        //     } else if (rData.activePower.unit !== 'W') {
-        //         debug.warn('wrong unit (' + rData.activePower.unit + ') on activePower -> skip energy accumulation');
-        //     } else {
-        //         this._energyDaily += rData.activePower.value * dt / 3600000;
-        //     }
-        // }
-        // rData.energyDaily = { createdAt: rData.createdAt, value: this._energyDaily, unit: 'Wh' };
-
         const r = new MonitorRecord(rData);
         debug.finer('monitor emits data: %o', r);
         this._lastRecord = r;
@@ -176,6 +158,13 @@ export class Monitor {
                 }
                 const ctrl = Controller.getInstance();
                 ctrl.setEnergyTotal(newest.energyTotal);
+                try {
+                    ctrl.setSmartModeValues(new SmartModeValues(newest.controllerStatus.smartModeValues));
+                    ctrl.setSetpointPower(newest.controllerStatus.setpointPower);
+                    ctrl.setParameter(newest.controllerStatus.parameter);
+                } catch (err) {
+                    debug.warn('cannot set controller parameter/values\n%e', err);
+                }
                 if (newest.createdAt.toDateString() === now.toDateString()) {
                     ctrl.setEnergyDaily(newest.createdAt, newest.energyDaily);
                 }
@@ -200,6 +189,7 @@ export class Monitor {
                 createdAt: new Date(),
                 energyDaily: Math.round(eDaily.value * 100) / 100,
                 energyTotal: Math.round(eTotal.value),
+                controllerStatus: ctrl.toObject(),
                 monitorRecord: r.toObject()
             };
             const tOut = JSON.stringify(t, null, 2) + '\n';

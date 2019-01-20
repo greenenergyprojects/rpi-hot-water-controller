@@ -8,6 +8,19 @@
             "config": "tiny"
          }
     },
+    "controller": {
+        "startMode": "power",
+        "powerSetting": {
+            "minWatts": 0,
+            "maxWatts": 2000,
+            "desiredWatts": 1000
+        },
+        "smartSetting": {
+            "minEBatPercent": 90,
+            "minWatts": 0,
+            "maxWatts": 2000
+        }
+    },
     "modbus": {
         "serial": [{
             "disabled": false,
@@ -34,14 +47,6 @@
                 "timeMillis": 10
             }
         }]
-    },
-    "controller": {
-        "startMode": "power",
-        "powerSetting": {
-            "minWatts": 0,
-            "maxWatts": 2000,
-            "desiredPower": 1000
-        }
     },
     "monitor": {
         "disabled": false,

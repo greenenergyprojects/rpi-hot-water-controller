@@ -11,16 +11,22 @@ import { HotWaterController } from './modbus/hot-water-controller';
 import { sprintf } from 'sprintf-js';
 import { ControllerParameter, IControllerParameter } from './data/common/hwc/controller-parameter';
 import { IControllerStatus, ControllerStatus } from './data/common/hwc/controller-status';
-
+import { SmartModeParameter } from './data/common/hwc/smart-mode-parameter';
+import { SmartModeValues } from './data/common/hwc/smart-mode-values';
 import { ControllerMode } from './data/common/hwc/controller-mode';
 import { IValue } from './data/common/hwc/value';
 
 interface IControllerConfig {
-    startMode: 'off' | 'power' | 'test';
+    startMode: 'off' | 'on' | 'power' | 'smart' | 'test';
     powerSetting: {
         minWatts: number;
         maxWatts: number;
         desiredWatts: number;
+    };
+    smartSetting: {
+        minEBatPercent: number;
+        minWatts: number;
+        maxWatts: number;
     };
 }
 
@@ -41,13 +47,14 @@ export class Controller {
 
     // ************************************************
 
-    private _config:        IControllerConfig;
-    private _parameter:     ControllerParameter;
-    private _mode:          ControllerMode;
-    private _setpointPower: number;
-    private _activePower:   number;
-    private _energyDaily:   number;
-    private _energyTotal:   number;
+    private _config:         IControllerConfig;
+    private _parameter:      ControllerParameter;
+    private _mode:           ControllerMode;
+    private _smartModeValues:    SmartModeValues;
+    private _setpointPower:  number;
+    private _activePower:    number;
+    private _energyDaily:    number;
+    private _energyTotal:    number;
 
     private _lastRefresh: { at: Date, activePower: number };
     private _timer: NodeJS.Timer;
@@ -63,20 +70,30 @@ export class Controller {
             let startMode: ControllerMode;
             switch (config.startMode) {
                 case 'off':   startMode = ControllerMode.off; break;
+                case 'on':    startMode = ControllerMode.on; break;
                 case 'power': startMode = ControllerMode.power; break;
+                case 'smart': startMode = ControllerMode.smart; break;
                 case 'test':  startMode = ControllerMode.test; break;
                 default: throw new Error('invalid mode ' + config.startMode);
             }
             this._parameter = new ControllerParameter({
-                createdAt:    new Date(),
-                from:        'config',
-                mode:         startMode,
-                desiredWatts: config.powerSetting.desiredWatts,
-                minWatts:     config.powerSetting.minWatts,
-                maxWatts:     config.powerSetting.maxWatts
+                createdAt:           new Date(),
+                from:               'config',
+                mode:                startMode,
+                desiredWatts:        config.powerSetting.desiredWatts,
+                minWatts:            config.powerSetting.minWatts,
+                maxWatts:            config.powerSetting.maxWatts,
+                smart: {
+                    minEBatPercent: config.smartSetting.minEBatPercent,
+                    minWatts:       config.smartSetting.minWatts,
+                    maxWatts:       config.smartSetting.maxWatts
+                }
             });
         }
 
+
+        this._smartModeValues = null;
+        this._setpointPower = 0;
         this._activePower = 0;
         this._energyDaily = 0;
         this._energyTotal = 0;
@@ -103,18 +120,28 @@ export class Controller {
 
     public getStatus (): ControllerStatus {
         return new ControllerStatus({
-            createdAt:   Date.now(),
-            parameter:   this._parameter.toObject(),
-            mode:        this._mode,
-            activePower: this._activePower,
-            energyDaily: this._energyDaily,
-            energyTotal: this._energyTotal
+            createdAt:       Date.now(),
+            parameter:       this._parameter.toObject(),
+            mode:            this._mode,
+            smartModeValues: this._smartModeValues.toObject(),
+            setpointPower:   this._setpointPower,
+            activePower:     this._activePower,
+            energyDaily:     this._energyDaily,
+            energyTotal:     this._energyTotal
         });
     }
 
 
+    public get parameter (): ControllerParameter {
+        return this._parameter;
+    }
+
     public get mode (): ControllerMode {
         return this._mode;
+    }
+
+    public get smartModeValues (): SmartModeValues {
+        return this._smartModeValues;
     }
 
     public get activePower (): IValue {
@@ -129,10 +156,20 @@ export class Controller {
         return { createdAt: Date.now(), createdFrom: 'controller', value: this._energyTotal, unit: 'Wh' };
     }
 
+    public setSetpointPower (value: number) {
+        if (value >= 0 && value <= 2000) {
+            this._setpointPower = value;
+        }
+    }
+
     public async setParameter (p: IControllerParameter): Promise<ControllerStatus> {
         this._parameter = new ControllerParameter(p);
         await this.refresh();
         return this.getStatus();
+    }
+
+    public setSmartModeValues (values: SmartModeValues) {
+        this._smartModeValues = values;
     }
 
     public setEnergyTotal (value: number) {
@@ -149,6 +186,13 @@ export class Controller {
     public async refresh () {
         debug.finer('refresh');
 
+        if (this._smartModeValues) {
+            if (Date.now() - this._smartModeValues.createdAt.getTime() > 60000) {
+                this._smartModeValues = null;
+            }
+        }
+
+        debug.finest('refresh()): mode=%s', this._parameter.mode);
         switch (this._parameter.mode) {
             case 'off': {
                 this._mode = ControllerMode.off;
@@ -156,9 +200,76 @@ export class Controller {
                 break;
             }
 
+            case 'on': {
+                this._mode = ControllerMode.on;
+                this._setpointPower = 2000;
+                break;
+            }
+
             case 'power': {
                 this._mode = ControllerMode.power;
                 this._setpointPower = this._parameter.desiredWatts;
+                if (this._setpointPower < this._parameter.minWatts) {
+                    this._setpointPower = this._parameter.minWatts;
+                }
+                if (this._setpointPower > this._parameter.maxWatts) {
+                    this._setpointPower = this._parameter.maxWatts;
+                }
+                break;
+            }
+
+            case 'smart': {
+                this._mode = ControllerMode.smart;
+                const p = this._parameter && this._parameter.smart;
+                debug.finest('smart: %o %o', p, this._smartModeValues);
+                if (!this._smartModeValues || !p) {
+                    debug.finer('mode smart: no values available => P = 0W');
+                    this._setpointPower  = 0;
+                } else if (this._smartModeValues.pGridWatt === null || this._smartModeValues.pBatWatt === null || this._smartModeValues.eBatPercent === null) {
+                    debug.finer('mode smart: some values are null => P = 0W');
+                    this._setpointPower  = 0;
+                } else {
+                    if (this._smartModeValues.eBatPercent < p.minEBatPercent) {
+                        debug.finer('mode smart: battery low (level %d%% < %d%% (min)) => P = 0W', this._smartModeValues.eBatPercent, p.minEBatPercent);
+                        this._setpointPower  = 0;
+
+                    } else if (this._smartModeValues.pBatWatt > 0) {
+                        let dP = this._smartModeValues.pBatWatt * 0.05;
+                        if  (dP > 100) { dP = 100; }
+                        this._setpointPower = Math.round(this._setpointPower - dP);
+                        debug.finer('mode smart: battery discharge > 100W (PBat=%dW) => P = %d', this._smartModeValues.pBatWatt, this._setpointPower);
+
+                    } else if (this._smartModeValues.pBatWatt < -100) {
+                        let dP = this._smartModeValues.pBatWatt * -0.01;
+                        if  (dP > 100) { dP = 100; }
+                        this._setpointPower = Math.round(this._setpointPower + dP);
+                        debug.finer('mode smart: battery charge > 100W (PBat=%dW) => P = %d', this._smartModeValues.pBatWatt, this._setpointPower);
+
+                    } else if (this._smartModeValues.pGridWatt < -50) {
+                        let dP = this._smartModeValues.pGridWatt * -0.05;
+                        if  (dP > 200) { dP = 200; }
+                        this._setpointPower = Math.round(this._setpointPower + dP);
+                        debug.finer('mode smart: PGrid < -100W => P = %dW', this._setpointPower );
+
+                    } else if (this._smartModeValues.pGridWatt > 50) {
+                        let dP = this._smartModeValues.pGridWatt * 0.05;
+                        if  (dP > 100) { dP = 100; }
+                        this._setpointPower = Math.round(this._setpointPower - dP);
+                        debug.finer('mode smart: PGrid > 50W => P = %dW', this._setpointPower );
+                    } else {
+                        debug.finer('mode smart: no changes, P = %dW', this._setpointPower );
+                    }
+
+                    if (this._setpointPower < p.minWatts) {
+                        this._setpointPower = p.minWatts;
+                        debug.finer('mode smart: limit P => P = %dW', this._setpointPower );
+                    }
+                    if (this._setpointPower > p.maxWatts) {
+                        this._setpointPower = p.maxWatts;
+                        debug.finer('mode smart: limit P => P = %dW', this._setpointPower );
+                    }
+                    this._setpointPower = Math.round(this._setpointPower);
+                }
                 break;
             }
 
@@ -169,12 +280,6 @@ export class Controller {
             }
         }
 
-        if (this._setpointPower < this._parameter.minWatts) {
-            this._setpointPower = this._parameter.minWatts;
-        }
-        if (this._setpointPower > this._parameter.maxWatts) {
-            this._setpointPower = this._parameter.maxWatts;
-        }
 
         const hwctrl = HotWaterController.getInstance();
         await hwctrl.writeActivePower(this._setpointPower);

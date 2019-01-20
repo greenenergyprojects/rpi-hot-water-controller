@@ -14,6 +14,7 @@ import { HotWaterController } from '../modbus/hot-water-controller';
 import { Controller } from '../controller';
 import { Server } from '../server';
 import { ControllerParameter, IControllerParameter } from '../data/common/hwc/controller-parameter';
+import { SmartModeValues } from '../data/common/hwc/smart-mode-values';
 
 
 
@@ -52,16 +53,15 @@ export class Router {
         try {
             const rv: IMonitorRecord [] = [];
             if (req.query && Object.getOwnPropertyNames(req.query).length > 0) {
-                const setPoint = req.query.setpoint;
-                if (!setPoint || +setPoint < 0 || +setPoint > 20) {
-                    throw new BadRequestError('invalid setpoint');
-                }
-                try {
-                    await HotWaterController.getInstance().writeCurrent4To20mA(+setPoint);
-                    await Monitor.getInstance().refresh();
-                } catch (err) {
-                    throw new InternalServerError('cannot set 4..24mA current setpoint', err);
-                }
+                debug.finer('monitor: query=%o', req.query);
+                const ctrl = Controller.getInstance();
+                const v = new SmartModeValues({
+                    createdAt: new Date(),
+                    eBatPercent: req.query.eBat,
+                    pBatWatt:    req.query.pBat,
+                    pGridWatt:   req.query.pGrid
+                });
+                ctrl.setSmartModeValues(v);
             }
             const r = Monitor.getInstance().lastRecord;
             if (r) {
