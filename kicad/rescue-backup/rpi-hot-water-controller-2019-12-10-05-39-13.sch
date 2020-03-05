@@ -1,6 +1,38 @@
-EESchema Schematic File Version 4
+EESchema Schematic File Version 2
+LIBS:power
+LIBS:device
+LIBS:switches
+LIBS:relays
+LIBS:motors
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
 LIBS:rpi-hot-water-controller-cache
-EELAYER 26 0
+EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -15,7 +47,7 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L rpi-hot-water-controller-rescue:PRJ-UC-ATMEGA324P-20AU U1
+L PRJ-UC-ATMEGA324P-20AU U1
 U 1 1 5BA3B4F6
 P 5400 4900
 F 0 "U1" H 4500 8100 50  0000 L BNN
@@ -26,7 +58,7 @@ F 3 "" H 5400 4950 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:HLK-5M05 U3
+L HLK-5M05 U3
 U 1 1 5BA3B6F4
 P 7900 1200
 F 0 "U3" H 7150 1450 50  0000 L BNN
@@ -37,7 +69,7 @@ F 3 "" H 7450 900 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:Screw_Terminal_01x03 J6
+L Screw_Terminal_01x03 J6
 U 1 1 5BA3B739
 P 6400 1200
 F 0 "J6" H 6400 1400 50  0000 C CNN
@@ -48,7 +80,7 @@ F 3 "" H 6400 1200 50  0001 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:R R8
+L R R8
 U 1 1 5BA3B829
 P 6900 1450
 F 0 "R8" H 7000 1450 50  0000 C CNN
@@ -59,7 +91,7 @@ F 3 "" H 6900 1450 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:C_Small C9
+L C_Small C9
 U 1 1 5BA3B8CE
 P 6700 1500
 F 0 "C9" H 6550 1600 50  0000 L CNN
@@ -70,7 +102,7 @@ F 3 "" H 6700 1500 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:GND #PWR01
+L GND #PWR01
 U 1 1 5BA3B90F
 P 6800 1800
 F 0 "#PWR01" H 6800 1550 50  0001 C CNN
@@ -81,7 +113,7 @@ F 3 "" H 6800 1800 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:+5V #PWR02
+L +5V #PWR02
 U 1 1 5BA3BA54
 P 8600 800
 F 0 "#PWR02" H 8600 650 50  0001 C CNN
@@ -92,7 +124,7 @@ F 3 "" H 8600 800 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:GND #PWR03
+L GND #PWR03
 U 1 1 5BA3BA8F
 P 8000 1300
 F 0 "#PWR03" H 8000 1050 50  0001 C CNN
@@ -103,7 +135,7 @@ F 3 "" H 8000 1300 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:+5V #PWR04
+L +5V #PWR04
 U 1 1 5BA3BAE8
 P 2000 2900
 F 0 "#PWR04" H 2000 2750 50  0001 C CNN
@@ -114,7 +146,7 @@ F 3 "" H 2000 2900 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:GND #PWR05
+L GND #PWR05
 U 1 1 5BA3BB86
 P 1400 6900
 F 0 "#PWR05" H 1400 6650 50  0001 C CNN
@@ -131,7 +163,7 @@ NoConn ~ 1800 6700
 NoConn ~ 1900 6700
 NoConn ~ 2000 6700
 $Comp
-L power:PWR_FLAG #FLG06
+L PWR_FLAG #FLG06
 U 1 1 5BA3C21B
 P 6700 800
 F 0 "#FLG06" H 6700 875 50  0001 C CNN
@@ -142,7 +174,7 @@ F 3 "" H 6700 800 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:PWR_FLAG #FLG07
+L PWR_FLAG #FLG07
 U 1 1 5BA3C242
 P 6900 1000
 F 0 "#FLG07" H 6900 1075 50  0001 C CNN
@@ -153,7 +185,7 @@ F 3 "" H 6900 1000 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:D_Schottky D14
+L D_Schottky D14
 U 1 1 5BA3C2B2
 P 8250 1100
 F 0 "D14" H 8300 1000 50  0000 C CNN
@@ -164,7 +196,7 @@ F 3 "" H 8250 1100 50  0001 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L power:PWR_FLAG #FLG08
+L PWR_FLAG #FLG08
 U 1 1 5BA3C4D7
 P 8800 1000
 F 0 "#FLG08" H 8800 1075 50  0001 C CNN
@@ -175,7 +207,7 @@ F 3 "" H 8800 1000 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:+3V3 #PWR09
+L +3V3 #PWR09
 U 1 1 5BA3C628
 P 1500 2900
 F 0 "#PWR09" H 1500 2750 50  0001 C CNN
@@ -186,7 +218,7 @@ F 3 "" H 1500 2900 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:PRJ_Raspberry_Pi_2+-RESCUE-rpi-hot-water-controller P1
+L PRJ_Raspberry_Pi_2+-RESCUE-rpi-hot-water-controller P1
 U 1 1 5BA3D7A9
 P 1800 3600
 F 0 "P1" H 1000 4100 50  0000 C CNN
@@ -197,7 +229,7 @@ F 3 "" H 1800 2550 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:SOLDERBRDIGE-3 B1
+L SOLDERBRDIGE-3 B1
 U 1 1 5BA47412
 P 3300 3100
 F 0 "B1" H 3300 2900 50  0000 C CNN
@@ -208,7 +240,7 @@ F 3 "" H 3300 3100 60  0001 C CNN
 	1    0    0    1   
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:C_Small C4
+L C_Small C4
 U 1 1 5BA47540
 P 3700 3100
 F 0 "C4" V 3550 3000 50  0000 L CNN
@@ -219,7 +251,7 @@ F 3 "" H 3700 3100 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:D_Schottky D16
+L D_Schottky D16
 U 1 1 5BA475BA
 P 3900 2850
 F 0 "D16" V 3750 2750 50  0000 C CNN
@@ -230,7 +262,7 @@ F 3 "" H 3900 2850 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:SW_Push SW1
+L SW_Push SW1
 U 1 1 5BA47700
 P 3900 3400
 F 0 "SW1" H 3950 3500 50  0000 L CNN
@@ -241,7 +273,7 @@ F 3 "" H 3900 3600 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:R R5
+L R R5
 U 1 1 5BA4777C
 P 4100 2850
 F 0 "R5" H 4200 2850 50  0000 C CNN
@@ -252,7 +284,7 @@ F 3 "" H 4100 2850 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:+3V3 #PWR010
+L +3V3 #PWR010
 U 1 1 5BA47A9D
 P 4000 2500
 F 0 "#PWR010" H 4000 2350 50  0001 C CNN
@@ -263,7 +295,7 @@ F 3 "" H 4000 2500 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:GND #PWR011
+L GND #PWR011
 U 1 1 5BA47B5A
 P 3600 3400
 F 0 "#PWR011" H 3600 3150 50  0001 C CNN
@@ -274,7 +306,7 @@ F 3 "" H 3600 3400 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:R R1
+L R R1
 U 1 1 5BA4869D
 P 2900 4350
 F 0 "R1" H 3000 4350 50  0000 C CNN
@@ -285,7 +317,7 @@ F 3 "" H 2900 4350 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:Resonator_Small Y1
+L Resonator_Small Y1
 U 1 1 5BA48F70
 P 3800 4100
 F 0 "Y1" V 3600 3900 50  0000 L CNN
@@ -296,7 +328,7 @@ F 3 "" H 3775 4100 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L power:GND #PWR012
+L GND #PWR012
 U 1 1 5BA49113
 P 3500 4200
 F 0 "#PWR012" H 3500 3950 50  0001 C CNN
@@ -307,7 +339,7 @@ F 3 "" H 3500 4200 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:R R2
+L R R2
 U 1 1 5BA492D0
 P 3150 4350
 F 0 "R2" H 3050 4350 50  0000 C CNN
@@ -318,7 +350,7 @@ F 3 "" H 3150 4350 50  0001 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L power:+3V3 #PWR013
+L +3V3 #PWR013
 U 1 1 5BA493D6
 P 2900 4100
 F 0 "#PWR013" H 2900 3950 50  0001 C CNN
@@ -329,7 +361,7 @@ F 3 "" H 2900 4100 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:+3V3 #PWR014
+L +3V3 #PWR014
 U 1 1 5BA4943B
 P 3150 4100
 F 0 "#PWR014" H 3150 3950 50  0001 C CNN
@@ -340,7 +372,7 @@ F 3 "" H 3150 4100 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:C_Small C3
+L C_Small C3
 U 1 1 5BA4953F
 P 3600 6100
 F 0 "C3" H 3450 6000 50  0000 L CNN
@@ -351,7 +383,7 @@ F 3 "" H 3600 6100 50  0001 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:Conn_01x02 J14
+L Conn_01x02 J14
 U 1 1 5BA49743
 P 4300 3800
 F 0 "J14" H 4300 3900 50  0000 C CNN
@@ -362,7 +394,7 @@ F 3 "" H 4300 3800 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:PRJ_USB_MINI J12
+L PRJ_USB_MINI J12
 U 1 1 5BA49CC3
 P 1200 1500
 F 0 "J12" H 1000 1850 50  0000 L CNN
@@ -373,7 +405,7 @@ F 3 "" H 1350 1450 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:D_Schottky D6
+L D_Schottky D6
 U 1 1 5BA5E647
 P 1950 1300
 F 0 "D6" H 1950 1400 50  0000 C CNN
@@ -384,7 +416,7 @@ F 3 "" H 1950 1300 50  0001 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L power:+5V #PWR015
+L +5V #PWR015
 U 1 1 5BA5F19C
 P 2100 900
 F 0 "#PWR015" H 2100 750 50  0001 C CNN
@@ -395,7 +427,7 @@ F 3 "" H 2100 900 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:GND #PWR016
+L GND #PWR016
 U 1 1 5BA5F32A
 P 1100 2100
 F 0 "#PWR016" H 1100 1850 50  0001 C CNN
@@ -406,7 +438,7 @@ F 3 "" H 1100 2100 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:GND #PWR017
+L GND #PWR017
 U 1 1 5BA5F532
 P 2400 2700
 F 0 "#PWR017" H 2400 2450 50  0001 C CNN
@@ -417,7 +449,7 @@ F 3 "" H 2400 2700 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:Resonator_Small Y2
+L Resonator_Small Y2
 U 1 1 5BA5F758
 P 1800 2100
 F 0 "Y2" V 1600 1900 50  0000 L CNN
@@ -428,7 +460,7 @@ F 3 "" H 1775 2100 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L power:GND #PWR018
+L GND #PWR018
 U 1 1 5BA5F937
 P 1500 2200
 F 0 "#PWR018" H 1500 1950 50  0001 C CNN
@@ -439,7 +471,7 @@ F 3 "" H 1500 2200 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:GND #PWR019
+L GND #PWR019
 U 1 1 5BA603DD
 P 4900 7100
 F 0 "#PWR019" H 4900 6850 50  0001 C CNN
@@ -450,7 +482,7 @@ F 3 "" H 4900 7100 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:+3V3 #PWR020
+L +3V3 #PWR020
 U 1 1 5BA6076F
 P 5100 950
 F 0 "#PWR020" H 5100 800 50  0001 C CNN
@@ -497,7 +529,7 @@ MOSI
 Text Label 4000 6400 0    60   ~ 0
 MISO
 $Comp
-L rpi-hot-water-controller-rescue:Atmega-ISP-6 J13
+L Atmega-ISP-6 J13
 U 1 1 5BA61D83
 P 3200 7000
 F 0 "J13" H 3400 7150 50  0000 L BNN
@@ -508,7 +540,7 @@ F 3 "" H 2750 6650 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:GND #PWR021
+L GND #PWR021
 U 1 1 5BA6212A
 P 4200 7300
 F 0 "#PWR021" H 4200 7050 50  0001 C CNN
@@ -519,7 +551,7 @@ F 3 "" H 4200 7300 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:+3V3 #PWR022
+L +3V3 #PWR022
 U 1 1 5BA62289
 P 4200 6900
 F 0 "#PWR022" H 4200 6750 50  0001 C CNN
@@ -538,7 +570,7 @@ Text Label 2900 7200 0    60   ~ 0
 Text Label 4200 7100 0    60   ~ 0
 MOSI
 $Comp
-L rpi-hot-water-controller-rescue:C_Small C2
+L C_Small C2
 U 1 1 5BA69E23
 P 2900 1000
 F 0 "C2" V 2800 850 50  0000 L CNN
@@ -549,7 +581,7 @@ F 3 "" H 2900 1000 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L power:GND #PWR023
+L GND #PWR023
 U 1 1 5BA6A310
 P 3100 1100
 F 0 "#PWR023" H 3100 850 50  0001 C CNN
@@ -560,7 +592,7 @@ F 3 "" H 3100 1100 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:R R3
+L R R3
 U 1 1 5BA6BEC1
 P 3400 1650
 F 0 "R3" H 3500 1650 50  0000 C CNN
@@ -571,7 +603,7 @@ F 3 "" H 3400 1650 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:+3V3 #PWR024
+L +3V3 #PWR024
 U 1 1 5BA6C0BF
 P 3400 1400
 F 0 "#PWR024" H 3400 1250 50  0001 C CNN
@@ -586,7 +618,7 @@ UC-TxD1
 Text Label 3700 4600 0    60   ~ 0
 UC-RxD1
 $Comp
-L rpi-hot-water-controller-rescue:C_Small C1
+L C_Small C1
 U 1 1 5BA73263
 P 1400 800
 F 0 "C1" V 1300 650 50  0000 L CNN
@@ -597,7 +629,7 @@ F 3 "" H 1400 800 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L power:GND #PWR025
+L GND #PWR025
 U 1 1 5BA7353D
 P 1100 800
 F 0 "#PWR025" H 1100 550 50  0001 C CNN
@@ -608,7 +640,7 @@ F 3 "" H 1100 800 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:L L1
+L L L1
 U 1 1 5BA76F8E
 P 5350 1150
 F 0 "L1" V 5450 1200 50  0000 C CNN
@@ -619,7 +651,7 @@ F 3 "" H 5350 1150 50  0001 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:C_Small C8
+L C_Small C8
 U 1 1 5BA77519
 P 5700 1300
 F 0 "C8" H 5750 1400 50  0000 L CNN
@@ -630,7 +662,7 @@ F 3 "" H 5700 1300 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:GND #PWR026
+L GND #PWR026
 U 1 1 5BA7798E
 P 4900 1550
 F 0 "#PWR026" H 4900 1300 50  0001 C CNN
@@ -641,7 +673,7 @@ F 3 "" H 4900 1550 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:C_Small C7
+L C_Small C7
 U 1 1 5BA78F40
 P 4900 1250
 F 0 "C7" H 4800 1350 50  0000 L CNN
@@ -652,7 +684,7 @@ F 3 "" H 4900 1250 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:C_Small C6
+L C_Small C6
 U 1 1 5BA79075
 P 4650 1250
 F 0 "C6" H 4550 1350 50  0000 L CNN
@@ -663,7 +695,7 @@ F 3 "" H 4650 1250 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:C_Small C5
+L C_Small C5
 U 1 1 5BA79151
 P 4400 1250
 F 0 "C5" H 4300 1350 50  0000 L CNN
@@ -674,7 +706,7 @@ F 3 "" H 4400 1250 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:PRJ-supply-5VtoPM12V_ebay-253052736386 U5
+L PRJ-supply-5VtoPM12V_ebay-253052736386 U5
 U 1 1 5BA6454A
 P 10500 1200
 F 0 "U5" H 9650 1450 50  0000 L BNN
@@ -685,7 +717,7 @@ F 3 "" H 10050 900 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:GND #PWR027
+L GND #PWR027
 U 1 1 5BA64A84
 P 9400 1400
 F 0 "#PWR027" H 9400 1150 50  0001 C CNN
@@ -696,7 +728,7 @@ F 3 "" H 9400 1400 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:+12V #PWR028
+L +12V #PWR028
 U 1 1 5BA6559D
 P 10600 1000
 F 0 "#PWR028" H 10600 850 50  0001 C CNN
@@ -707,7 +739,7 @@ F 3 "" H 10600 1000 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:-12V #PWR46
+L -12V #PWR46
 U 1 1 5BA6562D
 P 10800 800
 F 0 "#PWR46" H 10800 900 50  0001 C CNN
@@ -718,7 +750,7 @@ F 3 "" H 10800 800 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:SOLDERBRDIGE-2 B5
+L SOLDERBRDIGE-2 B5
 U 1 1 5BA660D3
 P 9100 1100
 F 0 "B5" V 9000 1100 50  0000 C CNN
@@ -752,7 +784,7 @@ F17 "PT1000-2-LED-g" I L 7800 5200 60
 F18 "PT1000-2-LED-r" I L 7800 5300 60 
 $EndSheet
 $Comp
-L power:GNDA #PWR029
+L GNDA #PWR029
 U 1 1 5BA69A86
 P 5700 1450
 F 0 "#PWR029" H 5700 1200 50  0001 C CNN
@@ -763,7 +795,7 @@ F 3 "" H 5700 1450 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:GNDA #PWR030
+L GNDA #PWR030
 U 1 1 5BA6AAE8
 P 5700 7200
 F 0 "#PWR030" H 5700 6950 50  0001 C CNN
@@ -774,7 +806,7 @@ F 3 "" H 5700 7200 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:SOLDERBRDIGE-2 B3
+L SOLDERBRDIGE-2 B3
 U 1 1 5BA6BADE
 P 5400 7000
 F 0 "B3" V 5300 7000 50  0000 C CNN
@@ -785,7 +817,7 @@ F 3 "" H 5400 7000 60  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L power:GNDA #PWR031
+L GNDA #PWR031
 U 1 1 5BA6DD81
 P 3600 6300
 F 0 "#PWR031" H 3600 6050 50  0001 C CNN
@@ -796,7 +828,7 @@ F 3 "" H 3600 6300 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:R R14
+L R R14
 U 1 1 5BA77412
 P 10100 4750
 F 0 "R14" H 10000 4900 50  0000 C CNN
@@ -807,7 +839,7 @@ F 3 "" H 10100 4750 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:GNDA #PWR032
+L GNDA #PWR032
 U 1 1 5BA77817
 P 10300 5500
 F 0 "#PWR032" H 10300 5250 50  0001 C CNN
@@ -818,7 +850,7 @@ F 3 "" H 10300 5500 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:+3V3 #PWR033
+L +3V3 #PWR033
 U 1 1 5BA77BB0
 P 10100 4500
 F 0 "#PWR033" H 10100 4350 50  0001 C CNN
@@ -829,7 +861,7 @@ F 3 "" H 10100 4500 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:+2V5 #PWR034
+L +2V5 #PWR034
 U 1 1 5BA77EE6
 P 10400 4900
 F 0 "#PWR034" H 10400 4750 50  0001 C CNN
@@ -840,7 +872,7 @@ F 3 "" H 10400 4900 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:PWR_FLAG #FLG035
+L PWR_FLAG #FLG035
 U 1 1 5BA7B313
 P 5700 1050
 F 0 "#FLG035" H 5700 1125 50  0001 C CNN
@@ -851,7 +883,7 @@ F 3 "" H 5700 1050 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:PWR_FLAG #FLG036
+L PWR_FLAG #FLG036
 U 1 1 5BA7CD23
 P 9400 1000
 F 0 "#FLG036" H 9400 1075 50  0001 C CNN
@@ -862,7 +894,7 @@ F 3 "" H 9400 1000 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:PWR_FLAG #FLG037
+L PWR_FLAG #FLG037
 U 1 1 5BA7DA24
 P 5850 7100
 F 0 "#FLG037" H 5850 7175 50  0001 C CNN
@@ -873,7 +905,7 @@ F 3 "" H 5850 7100 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:PRJ_LM336M-2.5 U4
+L PRJ_LM336M-2.5 U4
 U 1 1 5BA833E8
 P 9800 5200
 F 0 "U4" H 9750 5550 50  0000 C CNN
@@ -884,7 +916,7 @@ F 3 "" V 9800 5200 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:PWR_FLAG #FLG038
+L PWR_FLAG #FLG038
 U 1 1 5BA84986
 P 10700 4800
 F 0 "#FLG038" H 10700 4875 50  0001 C CNN
@@ -900,7 +932,7 @@ D+
 Text Label 1600 1600 0    60   ~ 0
 D-
 $Comp
-L power:GND #PWR039
+L GND #PWR039
 U 1 1 5BAB2115
 P 6600 7300
 F 0 "#PWR039" H 6600 7050 50  0001 C CNN
@@ -911,7 +943,7 @@ F 3 "" H 6600 7300 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:SW_SPDT SW2
+L SW_SPDT SW2
 U 1 1 5BAB288D
 P 6900 3200
 F 0 "SW2" H 6900 3400 50  0000 C CNN
@@ -922,7 +954,7 @@ F 3 "" H 6900 3200 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:LED D13
+L LED D13
 U 1 1 5BACC3A4
 P 6600 7050
 F 0 "D13" V 6700 6950 50  0000 C CNN
@@ -933,7 +965,7 @@ F 3 "" H 6600 7050 50  0001 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:R R7
+L R R7
 U 1 1 5BACD052
 P 6600 6650
 F 0 "R7" H 6700 6650 50  0000 C CNN
@@ -950,7 +982,7 @@ AREF
 Text Label 5600 1550 1    60   ~ 0
 AVCC
 $Comp
-L rpi-hot-water-controller-rescue:SOLDERBRDIGE-2 B2
+L SOLDERBRDIGE-2 B2
 U 1 1 5BADD7B0
 P 3300 5900
 F 0 "B2" V 3400 5900 50  0000 C CNN
@@ -961,7 +993,7 @@ F 3 "" H 3300 5900 60  0001 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L power:+2V5 #PWR040
+L +2V5 #PWR040
 U 1 1 5BADE258
 P 2900 5800
 F 0 "#PWR040" H 2900 5650 50  0001 C CNN
@@ -972,7 +1004,7 @@ F 3 "" H 2900 5800 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:CH340G U2
+L CH340G U2
 U 1 1 5BA49C58
 P 2100 1500
 F 0 "U2" H 2200 1800 50  0000 L CNN
@@ -991,7 +1023,7 @@ UC-RxD0
 Text Label 3900 2200 0    60   ~ 0
 UC-TxD0
 $Comp
-L rpi-hot-water-controller-rescue:R R4
+L R R4
 U 1 1 5BAEF204
 P 3650 1650
 F 0 "R4" H 3750 1650 50  0000 C CNN
@@ -1002,7 +1034,7 @@ F 3 "" H 3650 1650 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:+3V3 #PWR041
+L +3V3 #PWR041
 U 1 1 5BAEF20A
 P 3650 1400
 F 0 "#PWR041" H 3650 1250 50  0001 C CNN
@@ -1013,7 +1045,7 @@ F 3 "" H 3650 1400 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:Conn_01x02 X1
+L Conn_01x02 X1
 U 1 1 5BB20728
 P 10000 1900
 F 0 "X1" V 10100 1950 50  0000 C CNN
@@ -1024,7 +1056,7 @@ F 3 "" H 10000 1900 50  0001 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:Conn_01x02 X3
+L Conn_01x02 X3
 U 1 1 5BB21AA0
 P 7900 2700
 F 0 "X3" H 8000 2600 50  0000 C CNN
@@ -1035,7 +1067,7 @@ F 3 "" H 7900 2700 50  0001 C CNN
 	1    0    0    1   
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:Conn_01x02 X4
+L Conn_01x02 X4
 U 1 1 5BB21BEB
 P 7900 2900
 F 0 "X4" H 8000 2800 50  0000 C CNN
@@ -1046,7 +1078,7 @@ F 3 "" H 7900 2900 50  0001 C CNN
 	1    0    0    1   
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:R R12
+L R R12
 U 1 1 5BB22146
 P 7250 2600
 F 0 "R12" V 7150 2600 50  0000 C CNN
@@ -1057,7 +1089,7 @@ F 3 "" H 7250 2600 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:R R13
+L R R13
 U 1 1 5BB222A7
 P 7250 2800
 F 0 "R13" V 7150 2800 50  0000 C CNN
@@ -1068,7 +1100,7 @@ F 3 "" H 7250 2800 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L power:GND #PWR042
+L GND #PWR042
 U 1 1 5BB2681A
 P 7600 3000
 F 0 "#PWR042" H 7600 2750 50  0001 C CNN
@@ -1091,7 +1123,7 @@ F4 "DE" I R 3500 5300 60
 F5 "DI" I R 3500 5400 60 
 $EndSheet
 $Comp
-L rpi-hot-water-controller-rescue:PRJ_Conn_01x03 J20
+L PRJ_Conn_01x03 J20
 U 1 1 5BB5F0CC
 P 4000 5000
 F 0 "J20" H 4000 4800 50  0000 C CNN
@@ -1104,7 +1136,7 @@ $EndComp
 Text Label 3000 4800 0    60   ~ 0
 RPI-TxD
 $Comp
-L power:GND #PWR043
+L GND #PWR043
 U 1 1 5BB6687A
 P 7300 3200
 F 0 "#PWR043" H 7300 2950 50  0001 C CNN
@@ -1118,7 +1150,7 @@ NoConn ~ 7100 3300
 Text Label 6500 3200 0    60   ~ 0
 SW
 $Comp
-L rpi-hot-water-controller-rescue:R R59
+L R R59
 U 1 1 5BB73BA7
 P 10800 1450
 F 0 "R59" H 10950 1450 50  0000 C CNN
@@ -1129,7 +1161,7 @@ F 3 "" H 10800 1450 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:GND #PWR044
+L GND #PWR044
 U 1 1 5BB76E32
 P 10100 2900
 F 0 "#PWR044" H 10100 2650 50  0001 C CNN
@@ -1140,7 +1172,7 @@ F 3 "" H 10100 2900 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:Conn_01x01 J21
+L Conn_01x01 J21
 U 1 1 5BB50179
 P 10800 2500
 F 0 "J21" H 10800 2600 50  0000 C CNN
@@ -1151,7 +1183,7 @@ F 3 "" H 10800 2500 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:Conn_01x01 J22
+L Conn_01x01 J22
 U 1 1 5BB502CC
 P 10800 2800
 F 0 "J22" H 10800 2900 50  0000 C CNN
@@ -1164,7 +1196,7 @@ $EndComp
 NoConn ~ 10600 2500
 NoConn ~ 10600 2800
 $Comp
-L rpi-hot-water-controller-rescue:BSS138 Q6
+L BSS138 Q6
 U 1 1 5BB4EF57
 P 10000 2500
 F 0 "Q6" H 10200 2600 50  0000 L CNN
@@ -1175,7 +1207,7 @@ F 3 "" H 10000 2500 50  0001 L CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:+5V #PWR045
+L +5V #PWR045
 U 1 1 5BB4EF61
 P 8800 2000
 F 0 "#PWR045" H 8800 1850 50  0001 C CNN
@@ -1186,7 +1218,7 @@ F 3 "" H 8800 2000 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:R R10
+L R R10
 U 1 1 5BB4EF69
 P 8950 2500
 F 0 "R10" V 8850 2500 50  0000 C CNN
@@ -1197,7 +1229,7 @@ F 3 "" H 8950 2500 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:R R60
+L R R60
 U 1 1 5BB4EF71
 P 9850 2800
 F 0 "R60" V 9750 2800 50  0000 C CNN
@@ -1208,7 +1240,7 @@ F 3 "" H 9850 2800 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:SOLDERBRDIGE-3 B4
+L SOLDERBRDIGE-3 B4
 U 1 1 5BB4F4D2
 P 9300 2200
 F 0 "B4" H 9300 2000 50  0000 C CNN
@@ -1219,7 +1251,7 @@ F 3 "" H 9300 2200 60  0001 C CNN
 	1    0    0    1   
 $EndComp
 $Comp
-L power:+12V #PWR046
+L +12V #PWR046
 U 1 1 5BB5081E
 P 9000 2000
 F 0 "#PWR046" H 9000 1850 50  0001 C CNN
@@ -1230,7 +1262,7 @@ F 3 "" H 9000 2000 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:R R11
+L R R11
 U 1 1 5BB53DF4
 P 7250 2400
 F 0 "R11" V 7150 2400 50  0000 C CNN
@@ -1241,7 +1273,7 @@ F 3 "" H 7250 2400 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L power:GND #PWR047
+L GND #PWR047
 U 1 1 5BB57E63
 P 10700 1800
 F 0 "#PWR047" H 10700 1550 50  0001 C CNN
@@ -1252,7 +1284,7 @@ F 3 "" H 10700 1800 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:Conn_01x02 X2
+L Conn_01x02 X2
 U 1 1 5BB5AB93
 P 7900 2500
 F 0 "X2" H 8000 2400 50  0000 C CNN
@@ -1263,7 +1295,7 @@ F 3 "" H 7900 2500 50  0001 C CNN
 	1    0    0    1   
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:R R61
+L R R61
 U 1 1 5BB5B8BD
 P 9750 2200
 F 0 "R61" V 9650 2200 50  0000 C CNN
@@ -1274,7 +1306,7 @@ F 3 "" H 9750 2200 50  0001 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:Conn_01x04 J23
+L Conn_01x04 J23
 U 1 1 5BB5D5A5
 P 9500 3700
 F 0 "J23" H 9500 3900 50  0000 C CNN
@@ -1285,7 +1317,7 @@ F 3 "" H 9500 3700 50  0001 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L power:GND #PWR048
+L GND #PWR048
 U 1 1 5BB5D985
 P 9800 4000
 F 0 "#PWR048" H 9800 3750 50  0001 C CNN
@@ -1296,7 +1328,7 @@ F 3 "" H 9800 4000 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:+12V #PWR049
+L +12V #PWR049
 U 1 1 5BB5E0E5
 P 9800 3400
 F 0 "#PWR049" H 9800 3250 50  0001 C CNN
@@ -1307,7 +1339,7 @@ F 3 "" H 9800 3400 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:+5V #PWR050
+L +5V #PWR050
 U 1 1 5BB5E400
 P 10100 3400
 F 0 "#PWR050" H 10100 3250 50  0001 C CNN
@@ -1318,7 +1350,7 @@ F 3 "" H 10100 3400 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:+3V3 #PWR051
+L +3V3 #PWR051
 U 1 1 5BB5E5B0
 P 10400 3400
 F 0 "#PWR051" H 10400 3250 50  0001 C CNN
@@ -1329,7 +1361,7 @@ F 3 "" H 10400 3400 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:Conn_01x02 J24
+L Conn_01x02 J24
 U 1 1 5BB6345C
 P 10200 3900
 F 0 "J24" H 10300 3800 50  0000 C CNN
@@ -1342,7 +1374,7 @@ $EndComp
 Text Notes 10100 4150 0    60   ~ 0
 +3.3V external supply\nwhile manufactering
 $Comp
-L power:+3V3 #PWR052
+L +3V3 #PWR052
 U 1 1 5BBAE52C
 P 2400 900
 F 0 "#PWR052" H 2400 750 50  0001 C CNN
@@ -1361,14 +1393,14 @@ Wire Wire Line
 Wire Wire Line
 	1600 3100 1600 3000
 Wire Wire Line
-	1500 2900 1500 3000
+	1500 2900 1500 3100
 Connection ~ 8600 1100
 Wire Wire Line
 	8800 1100 8800 1000
 Wire Wire Line
 	8600 1100 8600 800 
 Wire Wire Line
-	8400 1100 8500 1100
+	8400 1100 8900 1100
 Connection ~ 6900 1200
 Wire Wire Line
 	6900 1000 6900 1200
@@ -1381,24 +1413,24 @@ Wire Wire Line
 Wire Wire Line
 	1400 6800 2100 6800
 Wire Wire Line
-	1400 6700 1400 6800
+	1400 6700 1400 6900
 Wire Wire Line
 	2100 3000 2100 3100
 Wire Wire Line
-	2000 2900 2000 3000
+	2000 2900 2000 3100
 Wire Wire Line
 	8000 1200 8000 1300
 Wire Wire Line
 	7900 1200 8000 1200
 Wire Wire Line
-	7900 1100 8000 1100
+	7900 1100 8100 1100
 Connection ~ 6700 1300
 Wire Wire Line
-	6600 1300 6700 1300
+	6600 1300 6900 1300
 Wire Wire Line
-	6600 1200 6900 1200
+	6600 1200 7000 1200
 Wire Wire Line
-	6600 1100 6700 1100
+	6600 1100 7000 1100
 Wire Wire Line
 	2700 3500 3000 3500
 Wire Wire Line
@@ -1406,7 +1438,7 @@ Wire Wire Line
 Wire Wire Line
 	3500 3100 3600 3100
 Wire Wire Line
-	3800 3100 3900 3100
+	3800 3100 4400 3100
 Connection ~ 4200 3100
 Wire Wire Line
 	3900 3100 3900 3000
@@ -1415,20 +1447,20 @@ Wire Wire Line
 	4100 3100 4100 3000
 Connection ~ 4100 3100
 Wire Wire Line
-	3900 2600 4000 2600
+	3900 2600 4100 2600
 Wire Wire Line
 	4000 2600 4000 2500
 Connection ~ 4000 2600
 Wire Wire Line
-	3900 4000 4000 4000
+	3900 4000 4400 4000
 Wire Wire Line
 	3900 4200 4400 4200
 Wire Wire Line
 	3600 4100 3500 4100
 Wire Wire Line
-	3500 3800 3500 4100
+	3500 3800 3500 4200
 Wire Wire Line
-	2700 4700 2900 4700
+	2700 4700 4400 4700
 Wire Wire Line
 	2900 4500 2900 4700
 Connection ~ 2900 4700
@@ -1449,17 +1481,17 @@ Connection ~ 8500 1100
 Wire Wire Line
 	2600 1100 2600 1000
 Wire Wire Line
-	2400 1000 2600 1000
+	2400 1000 2800 1000
 Wire Wire Line
 	2100 1500 1500 1500
 Wire Wire Line
 	1500 1600 2100 1600
 Wire Wire Line
-	1500 1300 1600 1300
+	1500 1300 1800 1300
 Wire Wire Line
-	2100 900  2100 1100
+	2100 900  2100 1300
 Wire Wire Line
-	1100 1900 1100 2000
+	1100 1900 1100 2100
 Wire Wire Line
 	1100 2000 1200 2000
 Wire Wire Line
@@ -1480,15 +1512,15 @@ Wire Wire Line
 Wire Wire Line
 	5100 7000 5100 6900
 Wire Wire Line
-	4900 7000 5000 7000
+	4900 7000 5200 7000
 Wire Wire Line
 	5000 6900 5000 7000
 Connection ~ 5000 7000
 Wire Wire Line
-	4900 6900 4900 7000
+	4900 6900 4900 7100
 Connection ~ 4900 7000
 Wire Wire Line
-	5100 950  5100 1050
+	5100 950  5100 1650
 Wire Wire Line
 	5200 1650 5200 1550
 Connection ~ 5100 1550
@@ -1526,21 +1558,21 @@ Wire Wire Line
 	3400 1800 3400 2100
 Connection ~ 3400 2100
 Wire Wire Line
-	1600 800  1600 1100
+	1600 800  1600 1300
 Wire Wire Line
 	1600 800  1500 800 
 Connection ~ 1600 1300
 Wire Wire Line
 	1300 800  1100 800 
 Wire Wire Line
-	5100 1550 5200 1550
+	5100 1550 5300 1550
 Wire Wire Line
 	5100 1150 5200 1150
 Connection ~ 5100 1150
 Wire Wire Line
-	5500 1150 5600 1150
+	5500 1150 5700 1150
 Wire Wire Line
-	5700 1050 5700 1150
+	5700 1050 5700 1200
 Wire Wire Line
 	5700 1400 5700 1450
 Wire Wire Line
@@ -1549,9 +1581,9 @@ Connection ~ 5600 1150
 Wire Wire Line
 	5300 1550 5300 1650
 Wire Wire Line
-	4400 1050 4650 1050
+	4400 1050 5100 1050
 Wire Wire Line
-	4400 800  4400 1050
+	4400 800  4400 1150
 Connection ~ 5100 1050
 Wire Wire Line
 	4650 1150 4650 1050
@@ -1560,11 +1592,11 @@ Wire Wire Line
 	4900 1150 4900 1050
 Connection ~ 4900 1050
 Wire Wire Line
-	4900 1350 4900 1450
+	4900 1350 4900 1550
 Wire Wire Line
-	4400 1450 4650 1450
+	4400 1450 4900 1450
 Wire Wire Line
-	4400 1350 4400 1450
+	4400 1350 4400 1700
 Wire Wire Line
 	4650 1350 4650 1450
 Connection ~ 4650 1450
@@ -1575,18 +1607,18 @@ Wire Wire Line
 Wire Wire Line
 	10600 1100 10600 1000
 Wire Wire Line
-	10800 800  10800 1200
+	10800 800  10800 1300
 Wire Wire Line
-	9300 1100 9400 1100
+	9300 1100 9500 1100
 Connection ~ 5100 7000
 Wire Wire Line
 	5600 7000 5700 7000
 Wire Wire Line
-	5700 6900 5700 7000
+	5700 6900 5700 7200
 Connection ~ 5700 7000
 Connection ~ 5700 1150
 Wire Wire Line
-	2400 900  2400 1000
+	2400 900  2400 1100
 Wire Wire Line
 	9400 1100 9400 1000
 Connection ~ 9400 1100
@@ -1598,7 +1630,7 @@ Wire Wire Line
 Wire Wire Line
 	6700 1600 6700 1700
 Wire Wire Line
-	6700 1700 6800 1700
+	6700 1700 6900 1700
 Wire Wire Line
 	6900 1700 6900 1600
 Connection ~ 6800 1700
@@ -1626,7 +1658,7 @@ Connection ~ 10400 5000
 Wire Wire Line
 	10100 4900 10100 5000
 Wire Wire Line
-	10000 5000 10100 5000
+	10000 5000 10700 5000
 Connection ~ 10100 5000
 Wire Wire Line
 	6600 6900 6600 6800
@@ -1635,14 +1667,14 @@ Wire Wire Line
 Wire Wire Line
 	3600 6200 3600 6300
 Wire Wire Line
-	3500 5900 3600 5900
+	3500 5900 4400 5900
 Connection ~ 3600 5900
 Wire Wire Line
 	3000 2300 2900 2300
 Wire Wire Line
-	2900 2100 3400 2100
+	2900 2100 4400 2100
 Wire Wire Line
-	2900 2200 3650 2200
+	2900 2200 4400 2200
 Wire Wire Line
 	3650 1500 3650 1400
 Wire Wire Line
@@ -1727,7 +1759,7 @@ Wire Wire Line
 Wire Wire Line
 	3150 4200 3150 4100
 Wire Wire Line
-	3150 4600 4300 4600
+	3150 4600 4400 4600
 Wire Wire Line
 	3150 4600 3150 4500
 Wire Wire Line
@@ -1764,7 +1796,7 @@ Connection ~ 10800 1200
 Wire Wire Line
 	10600 1300 10600 1700
 Wire Wire Line
-	10600 1700 10700 1700
+	10600 1700 10800 1700
 Wire Wire Line
 	10800 1700 10800 1600
 Wire Wire Line
@@ -1783,19 +1815,19 @@ Wire Wire Line
 Wire Wire Line
 	10100 2100 10100 2300
 Wire Wire Line
-	9100 2500 9200 2500
+	9100 2500 9800 2500
 Wire Wire Line
 	9700 2800 9200 2800
 Wire Wire Line
 	9200 2800 9200 2500
 Connection ~ 9200 2500
 Wire Wire Line
-	10100 2700 10100 2800
+	10100 2700 10100 2900
 Wire Wire Line
 	10100 2800 10000 2800
 Connection ~ 10100 2800
 Wire Wire Line
-	7600 2500 7600 2700
+	7600 2500 7600 3000
 Wire Wire Line
 	7700 2400 7400 2400
 Wire Wire Line
@@ -1813,7 +1845,7 @@ Wire Wire Line
 Wire Wire Line
 	9700 3800 9800 3800
 Wire Wire Line
-	9800 3800 9800 3900
+	9800 3800 9800 4000
 Wire Wire Line
 	9800 3400 9800 3500
 Wire Wire Line
@@ -1825,7 +1857,7 @@ Wire Wire Line
 Wire Wire Line
 	10400 3700 10400 3400
 Wire Wire Line
-	9700 3700 9900 3700
+	9700 3700 10400 3700
 Wire Wire Line
 	10000 3800 9900 3800
 Wire Wire Line
@@ -1838,7 +1870,7 @@ Connection ~ 2400 1000
 Connection ~ 1600 1100
 Connection ~ 2100 1100
 $Comp
-L rpi-hot-water-controller-rescue:SOLDERBRDIGE-2 B6
+L SOLDERBRDIGE-2 B6
 U 1 1 5BC051B3
 P 1900 1100
 F 0 "B6" V 1800 1100 50  0000 C CNN
@@ -1851,7 +1883,7 @@ $EndComp
 Wire Wire Line
 	1700 1100 1600 1100
 $Comp
-L rpi-hot-water-controller-rescue:R R62
+L R R62
 U 1 1 5BC09B93
 P 4000 1450
 F 0 "R62" H 3900 1600 50  0000 C CNN
@@ -1862,7 +1894,7 @@ F 3 "" H 4000 1450 50  0001 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L rpi-hot-water-controller-rescue:LED D19
+L LED D19
 U 1 1 5BC09BA1
 P 4000 1050
 F 0 "D19" V 4100 950 50  0000 C CNN
@@ -1885,7 +1917,7 @@ Wire Wire Line
 	4000 1700 4400 1700
 Connection ~ 4400 1450
 $Comp
-L rpi-hot-water-controller-rescue:Conn_01x03 J25
+L Conn_01x03 J25
 U 1 1 5BC0F18E
 P 8100 600
 F 0 "J25" V 8100 350 50  0000 C CNN
@@ -1902,7 +1934,7 @@ Wire Wire Line
 Wire Wire Line
 	8100 900  8100 800 
 $Comp
-L power:GND #PWR053
+L GND #PWR053
 U 1 1 5BC10416
 P 8400 650
 F 0 "#PWR053" H 8400 400 50  0001 C CNN
@@ -1918,118 +1950,4 @@ Wire Wire Line
 	8300 650  8300 800 
 Wire Wire Line
 	8300 800  8200 800 
-Wire Wire Line
-	2000 3000 2000 3100
-Wire Wire Line
-	1500 3000 1500 3100
-Wire Wire Line
-	8600 1100 8800 1100
-Wire Wire Line
-	6900 1200 7000 1200
-Wire Wire Line
-	6700 1100 7000 1100
-Wire Wire Line
-	1400 6800 1400 6900
-Wire Wire Line
-	6700 1300 6900 1300
-Wire Wire Line
-	4200 3100 4400 3100
-Wire Wire Line
-	3900 3100 4100 3100
-Wire Wire Line
-	4100 3100 4200 3100
-Wire Wire Line
-	4000 2600 4100 2600
-Wire Wire Line
-	2900 4700 3600 4700
-Wire Wire Line
-	4000 4000 4400 4000
-Wire Wire Line
-	3500 4100 3500 4200
-Wire Wire Line
-	8000 1100 8100 1100
-Wire Wire Line
-	8500 1100 8600 1100
-Wire Wire Line
-	1100 2000 1100 2100
-Wire Wire Line
-	5000 7000 5100 7000
-Wire Wire Line
-	4900 7000 4900 7100
-Wire Wire Line
-	5100 1550 5100 1650
-Wire Wire Line
-	5200 1550 5300 1550
-Wire Wire Line
-	2600 1000 2800 1000
-Wire Wire Line
-	3400 2100 4400 2100
-Wire Wire Line
-	1600 1300 1800 1300
-Wire Wire Line
-	5100 1150 5100 1550
-Wire Wire Line
-	5600 1150 5700 1150
-Wire Wire Line
-	5100 1050 5100 1150
-Wire Wire Line
-	4650 1050 4900 1050
-Wire Wire Line
-	4900 1050 5100 1050
-Wire Wire Line
-	4650 1450 4900 1450
-Wire Wire Line
-	4900 1450 4900 1550
-Wire Wire Line
-	8800 1100 8900 1100
-Wire Wire Line
-	5100 7000 5200 7000
-Wire Wire Line
-	5700 7000 5700 7100
-Wire Wire Line
-	5700 1150 5700 1200
-Wire Wire Line
-	9400 1100 9500 1100
-Wire Wire Line
-	5700 7100 5700 7200
-Wire Wire Line
-	6800 1700 6900 1700
-Wire Wire Line
-	10400 5000 10700 5000
-Wire Wire Line
-	10100 5000 10400 5000
-Wire Wire Line
-	3600 5900 4400 5900
-Wire Wire Line
-	3650 2200 4400 2200
-Wire Wire Line
-	7600 2700 7600 2900
-Wire Wire Line
-	7600 2900 7600 3000
-Wire Wire Line
-	4300 4600 4400 4600
-Wire Wire Line
-	3600 4700 4400 4700
-Wire Wire Line
-	10800 1200 10800 1300
-Wire Wire Line
-	10700 1700 10800 1700
-Wire Wire Line
-	9200 2500 9800 2500
-Wire Wire Line
-	10100 2800 10100 2900
-Wire Wire Line
-	9900 3700 10400 3700
-Wire Wire Line
-	9800 3900 9800 4000
-Wire Wire Line
-	2400 1000 2400 1100
-Wire Wire Line
-	1600 1100 1600 1300
-Wire Wire Line
-	2100 1100 2100 1300
-Wire Wire Line
-	4400 1050 4400 1150
-Wire Wire Line
-	4400 1450 4400 1700
 $EndSCHEMATC

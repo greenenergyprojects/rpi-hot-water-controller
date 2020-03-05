@@ -28,6 +28,7 @@ interface IControllerConfig {
         minWatts: number;
         maxWatts: number;
     };
+    froniusMeterDefect?: boolean;
 }
 
 export class Controller {
@@ -219,12 +220,46 @@ export class Controller {
             }
 
             case 'smart': {
+                const isFroniusMeterDefect = this._config.froniusMeterDefect === true;
                 this._mode = ControllerMode.smart;
                 const p = this._parameter && this._parameter.smart;
                 debug.finest('smart: %o %o', p, this._smartModeValues);
+
                 if (!this._smartModeValues || !p) {
                     debug.finer('mode smart: no values available => P = 0W');
                     this._setpointPower  = 0;
+
+                } else if (this._smartModeValues.pGridWatt === null || this._smartModeValues.pBatWatt === null || this._smartModeValues.eBatPercent === null ||
+                           this._smartModeValues.pPvSouthWatt === null || this._smartModeValues.pPvEastWestWatt === null) {
+                    debug.finer('mode smart: some values are null => P = 0W');
+                    this._setpointPower  = 0;
+
+                } else if (isFroniusMeterDefect) {
+                    if (this._smartModeValues.eBatPercent < p.minEBatPercent) {
+                        debug.finer('mode smart: fronius meter defect, battery low (level %d%% < %d%% (min)) => P = 0W',
+                                    this._smartModeValues.eBatPercent, p.minEBatPercent);
+                        this._setpointPower  = 0;
+                    } else {
+                        const pNotNeeded = this._smartModeValues.pPvSouthWatt + this._smartModeValues.pPvEastWestWatt + this._smartModeValues.pBatWatt;
+                        const pAvailable = pNotNeeded - (p.minWatts > 200 ? p.minWatts : 250) - this._setpointPower;
+                        debug.warn('mode smart: fronius meter defect, availaible power = %d', pAvailable);
+                        if (pAvailable < 0) {
+                            this._setpointPower = Math.round(this._setpointPower - 100);
+                            debug.finer('mode smart: fronius meter defect, decrease setpoint power to %dW', this._setpointPower);
+                        } else if (pAvailable > 100) {
+                            this._setpointPower = Math.round(this._setpointPower + 100);
+                            debug.finer('mode smart: fronius meter defect, increase setpoint power to %dW', this._setpointPower);
+                        } else {
+                            debug.finer('mode smart: fronius meter defect, setpoint power %dW not changed', this._setpointPower);
+                        }
+                        if (this._setpointPower < 0) {
+                            this._setpointPower = 0;
+                        } else  if (this._setpointPower > p.maxWatts) {
+                            this._setpointPower = p.maxWatts;
+                        }
+                        this._setpointPower = Math.round(this._setpointPower);
+                    }
+
                 } else if (this._smartModeValues.pGridWatt === null || this._smartModeValues.pBatWatt === null || this._smartModeValues.eBatPercent === null) {
                     debug.finer('mode smart: some values are null => P = 0W');
                     this._setpointPower  = 0;

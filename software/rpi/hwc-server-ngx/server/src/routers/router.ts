@@ -59,7 +59,9 @@ export class Router {
                     createdAt: new Date(),
                     eBatPercent: req.query.eBat,
                     pBatWatt:    req.query.pBat,
-                    pGridWatt:   req.query.pGrid
+                    pGridWatt:   req.query.pGrid,
+                    pPvSouthWatt: req.query.pPvSouth,
+                    pPvEastWestWatt: req.query.pPvEastWest
                 });
                 ctrl.setSmartModeValues(v);
             }

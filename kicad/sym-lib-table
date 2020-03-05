@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name rpi-hot-water-controller-rescue)(type Legacy)(uri ${KIPRJMOD}/rpi-hot-water-controller-rescue.lib)(options "")(descr ""))
+)

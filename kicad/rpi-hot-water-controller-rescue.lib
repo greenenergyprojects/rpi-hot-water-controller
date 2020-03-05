@@ -1,124 +1,11 @@
 EESchema-LIBRARY Version 2.4
 #encoding utf-8
 #
-# power_+12V
+# Atmega-ISP-6
 #
-DEF power_+12V #PWR 0 0 Y Y 1 F P
-F0 "#PWR" 0 -150 50 H I C CNN
-F1 "power_+12V" 0 140 50 H V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-DRAW
-P 2 0 1 0 -30 50 0 100 N
-P 2 0 1 0 0 0 0 100 N
-P 2 0 1 0 0 100 30 50 N
-X +12V 1 0 0 0 U 50 50 1 1 W N
-ENDDRAW
-ENDDEF
-#
-# power_+2V5
-#
-DEF power_+2V5 #PWR 0 0 Y Y 1 F P
-F0 "#PWR" 0 -150 50 H I C CNN
-F1 "power_+2V5" 0 140 50 H V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-DRAW
-P 2 0 1 0 -30 50 0 100 N
-P 2 0 1 0 0 0 0 100 N
-P 2 0 1 0 0 100 30 50 N
-X +2V5 1 0 0 0 U 50 50 1 1 W N
-ENDDRAW
-ENDDEF
-#
-# power_+3V3
-#
-DEF power_+3V3 #PWR 0 0 Y Y 1 F P
-F0 "#PWR" 0 -150 50 H I C CNN
-F1 "power_+3V3" 0 140 50 H V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-ALIAS +3.3V
-DRAW
-P 2 0 1 0 -30 50 0 100 N
-P 2 0 1 0 0 0 0 100 N
-P 2 0 1 0 0 100 30 50 N
-X +3V3 1 0 0 0 U 50 50 1 1 W N
-ENDDRAW
-ENDDEF
-#
-# power_+5V
-#
-DEF power_+5V #PWR 0 0 Y Y 1 F P
-F0 "#PWR" 0 -150 50 H I C CNN
-F1 "power_+5V" 0 140 50 H V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-DRAW
-P 2 0 1 0 -30 50 0 100 N
-P 2 0 1 0 0 0 0 100 N
-P 2 0 1 0 0 100 30 50 N
-X +5V 1 0 0 0 U 50 50 1 1 W N
-ENDDRAW
-ENDDEF
-#
-# power_-12V
-#
-DEF power_-12V #PWR 0 0 Y Y 1 F P
-F0 "#PWR" 0 100 50 H I C CNN
-F1 "power_-12V" 0 150 50 H V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-DRAW
-P 6 0 1 0 0 0 0 50 30 50 0 100 -30 50 0 50 F
-X -12V 1 0 0 0 U 50 50 0 0 W N
-ENDDRAW
-ENDDEF
-#
-# power_GND
-#
-DEF power_GND #PWR 0 0 Y Y 1 F P
-F0 "#PWR" 0 -250 50 H I C CNN
-F1 "power_GND" 0 -150 50 H V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-DRAW
-P 6 0 1 0 0 0 0 -50 50 -50 0 -100 -50 -50 0 -50 N
-X GND 1 0 0 0 D 50 50 1 1 W N
-ENDDRAW
-ENDDEF
-#
-# power_GNDA
-#
-DEF power_GNDA #PWR 0 0 Y Y 1 F P
-F0 "#PWR" 0 -250 50 H I C CNN
-F1 "power_GNDA" 0 -150 50 H V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-DRAW
-P 6 0 1 0 0 0 0 -50 50 -50 0 -100 -50 -50 0 -50 N
-X GNDA 1 0 0 0 D 50 50 1 1 W N
-ENDDRAW
-ENDDEF
-#
-# power_PWR_FLAG
-#
-DEF power_PWR_FLAG #FLG 0 0 N N 1 F P
-F0 "#FLG" 0 75 50 H I C CNN
-F1 "power_PWR_FLAG" 0 150 50 H V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-DRAW
-P 6 0 1 0 0 0 0 50 -40 75 0 100 40 75 0 50 N
-X pwr 1 0 0 0 U 50 50 0 0 w
-ENDDRAW
-ENDDEF
-#
-# rpi-hot-water-controller-rescue_Atmega-ISP-6
-#
-DEF rpi-hot-water-controller-rescue_Atmega-ISP-6 J 0 40 Y Y 1 F N
+DEF Atmega-ISP-6 J 0 40 Y Y 1 F N
 F0 "J" 200 150 50 H V L BNN
-F1 "rpi-hot-water-controller-rescue_Atmega-ISP-6" 200 -450 50 H V L BNN
+F1 "Atmega-ISP-6" 200 -450 50 H V L BNN
 F2 "IDC 2x3" 450 -300 50 H I C CIN
 F3 "" -450 -350 50 H I C CNN
 $FPLIST
@@ -135,11 +22,11 @@ X GND 6 900 -200 200 L 50 50 1 1 W
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_BSS138
+# BSS138
 #
-DEF rpi-hot-water-controller-rescue_BSS138 Q 0 0 Y N 1 F N
+DEF BSS138 Q 0 0 Y N 1 F N
 F0 "Q" 200 75 50 H V L CNN
-F1 "rpi-hot-water-controller-rescue_BSS138" 200 0 50 H V L CNN
+F1 "BSS138" 200 0 50 H V L CNN
 F2 "TO_SOT_Packages_SMD:SOT-23" 200 -75 50 H I L CIN
 F3 "" 0 0 50 H I L CNN
 $FPLIST
@@ -169,11 +56,11 @@ X D 3 100 200 100 D 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_CH340G
+# CH340G
 #
-DEF rpi-hot-water-controller-rescue_CH340G U 0 40 Y Y 1 F N
+DEF CH340G U 0 40 Y Y 1 F N
 F0 "U" 100 300 50 H V L CNN
-F1 "rpi-hot-water-controller-rescue_CH340G" 500 -1000 50 H V L CNN
+F1 "CH340G" 500 -1000 50 H V L CNN
 F2 "" 550 -350 50 H I C CNN
 F3 "" 550 -350 50 H I C CNN
 DRAW
@@ -197,11 +84,11 @@ X ~CTS~ 9 800 -400 150 L 50 50 1 1 I
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_C_Small
+# C_Small
 #
-DEF rpi-hot-water-controller-rescue_C_Small C 0 10 N N 1 F N
+DEF C_Small C 0 10 N N 1 F N
 F0 "C" 10 70 50 H V L CNN
-F1 "rpi-hot-water-controller-rescue_C_Small" 10 -80 50 H V L CNN
+F1 "C_Small" 10 -80 50 H V L CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -215,11 +102,11 @@ X ~ 2 0 -100 80 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_Conn_01x01
+# Conn_01x01
 #
-DEF rpi-hot-water-controller-rescue_Conn_01x01 J 0 40 Y N 1 F N
+DEF Conn_01x01 J 0 40 Y N 1 F N
 F0 "J" 0 100 50 H V C CNN
-F1 "rpi-hot-water-controller-rescue_Conn_01x01" 0 -100 50 H V C CNN
+F1 "Conn_01x01" 0 -100 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -237,11 +124,11 @@ X Pin_1 1 -200 0 150 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_Conn_01x02
+# Conn_01x02
 #
-DEF rpi-hot-water-controller-rescue_Conn_01x02 J 0 40 Y N 1 F N
+DEF Conn_01x02 J 0 40 Y N 1 F N
 F0 "J" 0 100 50 H V C CNN
-F1 "rpi-hot-water-controller-rescue_Conn_01x02" 0 -200 50 H V C CNN
+F1 "Conn_01x02" 0 -200 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -261,11 +148,11 @@ X Pin_2 2 -200 -100 150 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_Conn_01x03
+# Conn_01x03
 #
-DEF rpi-hot-water-controller-rescue_Conn_01x03 J 0 40 Y N 1 F N
+DEF Conn_01x03 J 0 40 Y N 1 F N
 F0 "J" 0 200 50 H V C CNN
-F1 "rpi-hot-water-controller-rescue_Conn_01x03" 0 -200 50 H V C CNN
+F1 "Conn_01x03" 0 -200 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -287,11 +174,11 @@ X Pin_3 3 -200 -100 150 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_Conn_01x04
+# Conn_01x04
 #
-DEF rpi-hot-water-controller-rescue_Conn_01x04 J 0 40 Y N 1 F N
+DEF Conn_01x04 J 0 40 Y N 1 F N
 F0 "J" 0 200 50 H V C CNN
-F1 "rpi-hot-water-controller-rescue_Conn_01x04" 0 -300 50 H V C CNN
+F1 "Conn_01x04" 0 -300 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -315,11 +202,11 @@ X Pin_4 4 -200 -200 150 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_D_Schottky
+# D_Schottky
 #
-DEF rpi-hot-water-controller-rescue_D_Schottky D 0 40 N N 1 F N
+DEF D_Schottky D 0 40 N N 1 F N
 F0 "D" 0 100 50 H V C CNN
-F1 "rpi-hot-water-controller-rescue_D_Schottky" 0 -100 50 H V C CNN
+F1 "D_Schottky" 0 -100 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -338,11 +225,11 @@ X A 2 150 0 100 L 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_D_TVS_x2_AAC-RESCUE-rpi-atmega324-modbus-x3-gateway
+# D_TVS_x2_AAC-RESCUE-rpi-atmega324-modbus-x3-gateway
 #
-DEF rpi-hot-water-controller-rescue_D_TVS_x2_AAC-RESCUE-rpi-atmega324-modbus-x3-gateway D 0 40 Y N 1 F N
+DEF D_TVS_x2_AAC-RESCUE-rpi-atmega324-modbus-x3-gateway D 0 40 Y N 1 F N
 F0 "D" 0 175 50 H V C CNN
-F1 "rpi-hot-water-controller-rescue_D_TVS_x2_AAC-RESCUE-rpi-atmega324-modbus-x3-gateway" 0 100 50 H V C CNN
+F1 "D_TVS_x2_AAC-RESCUE-rpi-atmega324-modbus-x3-gateway" 0 100 50 H V C CNN
 F2 "" -150 0 50 H I C CNN
 F3 "" -150 0 50 H I C CNN
 DRAW
@@ -360,11 +247,11 @@ X common 3 0 -200 100 U 50 50 1 1 I
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_G3MB-202P
+# G3MB-202P
 #
-DEF rpi-hot-water-controller-rescue_G3MB-202P U 0 40 Y N 1 F N
+DEF G3MB-202P U 0 40 Y N 1 F N
 F0 "U" -200 200 50 H V L CNN
-F1 "rpi-hot-water-controller-rescue_G3MB-202P" 0 200 50 H V L CNN
+F1 "G3MB-202P" 0 200 50 H V L CNN
 F2 "Photo MOSFET SSR" -200 -200 50 H I L CIN
 F3 "" -50 0 50 H I L CNN
 $FPLIST
@@ -414,11 +301,11 @@ X - 4 -300 -100 100 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_HLK-5M05
+# HLK-5M05
 #
-DEF rpi-hot-water-controller-rescue_HLK-5M05 U 0 40 Y Y 1 F N
+DEF HLK-5M05 U 0 40 Y Y 1 F N
 F0 "U" -750 250 50 H V L BNN
-F1 "rpi-hot-water-controller-rescue_HLK-5M05" -750 -250 50 H V L BNN
+F1 "HLK-5M05" -750 -250 50 H V L BNN
 F2 "HLK_5M05" -450 -100 50 H I C CIN
 F3 "" -450 -300 50 H I C CNN
 $FPLIST
@@ -433,11 +320,11 @@ X AC(230V) 4 -900 0 150 R 40 40 1 1 W
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_L
+# L
 #
-DEF rpi-hot-water-controller-rescue_L L 0 40 N N 1 F N
+DEF L L 0 40 N N 1 F N
 F0 "L" -50 0 50 V V C CNN
-F1 "rpi-hot-water-controller-rescue_L" 75 0 50 V V C CNN
+F1 "L" 75 0 50 V V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -456,11 +343,11 @@ X 2 2 0 -150 50 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_LED
+# LED
 #
-DEF rpi-hot-water-controller-rescue_LED D 0 40 Y N 1 F N
+DEF LED D 0 40 Y N 1 F N
 F0 "D" 0 100 50 H V C CNN
-F1 "rpi-hot-water-controller-rescue_LED" 0 -100 50 H V C CNN
+F1 "LED" 0 -100 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -477,11 +364,11 @@ X A 2 150 0 100 L 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_LM358
+# LM358
 #
-DEF rpi-hot-water-controller-rescue_LM358 U 0 20 Y Y 2 F N
+DEF LM358 U 0 20 Y Y 2 F N
 F0 "U" 0 200 50 H V L CNN
-F1 "rpi-hot-water-controller-rescue_LM358" 0 -200 50 H V L CNN
+F1 "LM358" 0 -200 50 H V L CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -510,11 +397,11 @@ X ~ 7 300 0 100 L 50 50 2 1 O
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_POT_TRIM
+# POT_TRIM
 #
-DEF rpi-hot-water-controller-rescue_POT_TRIM RV 0 40 N N 1 F N
+DEF POT_TRIM RV 0 40 N N 1 F N
 F0 "RV" -175 0 50 V V C CNN
-F1 "rpi-hot-water-controller-rescue_POT_TRIM" -100 0 50 V V C CNN
+F1 "POT_TRIM" -100 0 50 V V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -530,11 +417,11 @@ X 3 3 0 -150 50 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_PRJ-UC-ATMEGA324P-20AU
+# PRJ-UC-ATMEGA324P-20AU
 #
-DEF rpi-hot-water-controller-rescue_PRJ-UC-ATMEGA324P-20AU U 0 40 Y Y 1 F N
+DEF PRJ-UC-ATMEGA324P-20AU U 0 40 Y Y 1 F N
 F0 "U" -800 3150 50 H V L BNN
-F1 "rpi-hot-water-controller-rescue_PRJ-UC-ATMEGA324P-20AU" 500 -1950 50 H V L BNN
+F1 "PRJ-UC-ATMEGA324P-20AU" 500 -1950 50 H V L BNN
 F2 "TQFP44" 0 50 50 H I C CIN
 F3 "" 0 50 50 H I C CNN
 DRAW
@@ -586,11 +473,11 @@ X (PCINT24/RXD0)PD0 9 -1000 2800 150 R 40 40 1 1 I
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_PRJ-supply-5VtoPM12V_ebay-253052736386
+# PRJ-supply-5VtoPM12V_ebay-253052736386
 #
-DEF rpi-hot-water-controller-rescue_PRJ-supply-5VtoPM12V_ebay-253052736386 U 0 40 Y Y 1 F N
+DEF PRJ-supply-5VtoPM12V_ebay-253052736386 U 0 40 Y Y 1 F N
 F0 "U" -850 250 50 H V L BNN
-F1 "rpi-hot-water-controller-rescue_PRJ-supply-5VtoPM12V_ebay-253052736386" -850 -350 50 H V L BNN
+F1 "PRJ-supply-5VtoPM12V_ebay-253052736386" -850 -350 50 H V L BNN
 F2 "ebay-253052736386" -450 -200 25 H I C CIN
 F3 "" -450 -300 50 H I C CNN
 $FPLIST
@@ -606,11 +493,11 @@ X -12V(out) 5 0 0 150 L 40 40 1 1 w
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_PRJ_Conn_01x03
+# PRJ_Conn_01x03
 #
-DEF rpi-hot-water-controller-rescue_PRJ_Conn_01x03 J 0 40 Y N 1 F N
+DEF PRJ_Conn_01x03 J 0 40 Y N 1 F N
 F0 "J" 0 200 50 H V C CNN
-F1 "rpi-hot-water-controller-rescue_PRJ_Conn_01x03" 0 -200 50 H V C CNN
+F1 "PRJ_Conn_01x03" 0 -200 50 H V C CNN
 F2 "" 25 0 50 H I C CNN
 F3 "" 25 0 50 H I C CNN
 $FPLIST
@@ -635,11 +522,11 @@ X Pin_3 3 -200 -100 150 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_PRJ_LED_Bi-color_red-green
+# PRJ_LED_Bi-color_red-green
 #
-DEF rpi-hot-water-controller-rescue_PRJ_LED_Bi-color_red-green D 0 0 Y N 1 F N
+DEF PRJ_LED_Bi-color_red-green D 0 0 Y N 1 F N
 F0 "D" -150 150 50 H V C CNN
-F1 "rpi-hot-water-controller-rescue_PRJ_LED_Bi-color_red-green" 0 -250 50 H V C CNN
+F1 "PRJ_LED_Bi-color_red-green" 0 -250 50 H V C CNN
 F2 "" 30 0 50 H I C CNN
 F3 "" 30 0 50 H I C CNN
 DRAW
@@ -665,11 +552,11 @@ X K2 4 300 -100 150 L 50 50 1 1 I
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_PRJ_LM336M-2.5
+# PRJ_LM336M-2.5
 #
-DEF rpi-hot-water-controller-rescue_PRJ_LM336M-2.5 U 0 40 Y N 1 F N
+DEF PRJ_LM336M-2.5 U 0 40 Y N 1 F N
 F0 "U" -50 350 50 H V C CNN
-F1 "rpi-hot-water-controller-rescue_PRJ_LM336M-2.5" 0 -350 50 H V C CNN
+F1 "PRJ_LM336M-2.5" 0 -350 50 H V C CNN
 F2 "" 0 0 50 V I C CNN
 F3 "" 0 0 50 V I C CNN
 $FPLIST
@@ -695,11 +582,11 @@ X + 8 200 200 100 L 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_PRJ_Raspberry_Pi_2+-RESCUE-rpi-hot-water-controller
+# PRJ_Raspberry_Pi_2+-RESCUE-rpi-hot-water-controller
 #
-DEF rpi-hot-water-controller-rescue_PRJ_Raspberry_Pi_2+-RESCUE-rpi-hot-water-controller J 0 40 Y Y 1 F N
+DEF PRJ_Raspberry_Pi_2+-RESCUE-rpi-hot-water-controller J 0 40 Y Y 1 F N
 F0 "J" 700 500 50 H V C CNN
-F1 "rpi-hot-water-controller-rescue_PRJ_Raspberry_Pi_2+-RESCUE-rpi-hot-water-controller" 800 -3100 50 H V C CNN
+F1 "PRJ_Raspberry_Pi_2+-RESCUE-rpi-hot-water-controller" 800 -3100 50 H V C CNN
 F2 "Raspberry: RPI" -800 -3100 50 H I C CNN
 F3 "" 0 -1050 50 H I C CNN
 $FPLIST
@@ -750,11 +637,11 @@ X GND 9 -300 -3100 100 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_PRJ_USB_MINI
+# PRJ_USB_MINI
 #
-DEF rpi-hot-water-controller-rescue_PRJ_USB_MINI J 0 40 Y Y 1 F N
+DEF PRJ_USB_MINI J 0 40 Y Y 1 F N
 F0 "J" -200 450 50 H V L CNN
-F1 "rpi-hot-water-controller-rescue_PRJ_USB_MINI" -200 350 50 H V L CNN
+F1 "PRJ_USB_MINI" -200 350 50 H V L CNN
 F2 "" 150 -50 50 H I C CNN
 F3 "" 150 -50 50 H I C CNN
 $FPLIST
@@ -785,11 +672,11 @@ X Shield 6 -100 -400 100 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_Polyfuse
+# Polyfuse
 #
-DEF rpi-hot-water-controller-rescue_Polyfuse F 0 0 N Y 1 F N
+DEF Polyfuse F 0 0 N Y 1 F N
 F0 "F" -100 0 50 V V C CNN
-F1 "rpi-hot-water-controller-rescue_Polyfuse" 100 0 50 V V C CNN
+F1 "Polyfuse" 100 0 50 V V C CNN
 F2 "" 50 -200 50 H I L CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -805,11 +692,11 @@ X ~ 2 0 -150 50 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_R
+# R
 #
-DEF rpi-hot-water-controller-rescue_R R 0 0 N Y 1 F N
+DEF R R 0 0 N Y 1 F N
 F0 "R" 80 0 50 V V C CNN
-F1 "rpi-hot-water-controller-rescue_R" 0 0 50 V V C CNN
+F1 "R" 0 0 50 V V C CNN
 F2 "" -70 0 50 V I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -823,11 +710,11 @@ X ~ 2 0 -150 50 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_Resonator_Small
+# Resonator_Small
 #
-DEF rpi-hot-water-controller-rescue_Resonator_Small Y 0 40 Y N 1 F N
+DEF Resonator_Small Y 0 40 Y N 1 F N
 F0 "Y" 125 75 50 H V L CNN
-F1 "rpi-hot-water-controller-rescue_Resonator_Small" 125 0 50 H V L CNN
+F1 "Resonator_Small" 125 0 50 H V L CNN
 F2 "" -25 0 50 H I C CNN
 F3 "" -25 0 50 H I C CNN
 $FPLIST
@@ -858,11 +745,11 @@ X 3 3 100 100 50 D 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_SN65HVD11
+# SN65HVD11
 #
-DEF rpi-hot-water-controller-rescue_SN65HVD11 U 0 40 Y Y 1 F N
+DEF SN65HVD11 U 0 40 Y Y 1 F N
 F0 "U" -240 450 50 H V C CNN
-F1 "rpi-hot-water-controller-rescue_SN65HVD11" 30 450 50 H V L CNN
+F1 "SN65HVD11" 30 450 50 H V L CNN
 F2 "" 0 -700 50 H I C CNN
 F3 "" 0 50 50 H I C CNN
 $FPLIST
@@ -899,11 +786,11 @@ X VCC 8 0 500 100 D 50 50 1 1 W
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_SOLDERBRDIGE-2
+# SOLDERBRDIGE-2
 #
-DEF rpi-hot-water-controller-rescue_SOLDERBRDIGE-2 J 0 40 N N 1 F N
+DEF SOLDERBRDIGE-2 J 0 40 N N 1 F N
 F0 "J" 100 150 50 H V C CNN
-F1 "rpi-hot-water-controller-rescue_SOLDERBRDIGE-2" 100 -149 50 H V C CNN
+F1 "SOLDERBRDIGE-2" 100 -149 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 60 H I C CNN
 DRAW
@@ -914,11 +801,11 @@ X G2 2 0 -200 100 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_SOLDERBRDIGE-3
+# SOLDERBRDIGE-3
 #
-DEF rpi-hot-water-controller-rescue_SOLDERBRDIGE-3 J 0 40 Y N 1 F N
+DEF SOLDERBRDIGE-3 J 0 40 Y N 1 F N
 F0 "J" 50 200 50 H V C CNN
-F1 "rpi-hot-water-controller-rescue_SOLDERBRDIGE-3" 50 -199 50 H V C CNN
+F1 "SOLDERBRDIGE-3" 50 -199 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 60 H I C CNN
 $FPLIST
@@ -937,11 +824,11 @@ X G3 3 -200 -100 100 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_SW_Push
+# SW_Push
 #
-DEF rpi-hot-water-controller-rescue_SW_Push SW 0 40 N N 1 F N
+DEF SW_Push SW 0 40 N N 1 F N
 F0 "SW" 50 100 50 H V L CNN
-F1 "rpi-hot-water-controller-rescue_SW_Push" 0 -60 50 H V C CNN
+F1 "SW_Push" 0 -60 50 H V C CNN
 F2 "" 0 200 50 H I C CNN
 F3 "" 0 200 50 H I C CNN
 DRAW
@@ -954,11 +841,11 @@ X 2 2 200 0 100 L 50 50 0 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_SW_SPDT
+# SW_SPDT
 #
-DEF rpi-hot-water-controller-rescue_SW_SPDT SW 0 0 Y N 1 F N
+DEF SW_SPDT SW 0 0 Y N 1 F N
 F0 "SW" 0 170 50 H V C CNN
-F1 "rpi-hot-water-controller-rescue_SW_SPDT" 0 -200 50 H V C CNN
+F1 "SW_SPDT" 0 -200 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 DRAW
@@ -972,11 +859,11 @@ X C 3 200 -100 100 L 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_Screw_Terminal_01x02
+# Screw_Terminal_01x02
 #
-DEF rpi-hot-water-controller-rescue_Screw_Terminal_01x02 J 0 40 Y N 1 F N
+DEF Screw_Terminal_01x02 J 0 40 Y N 1 F N
 F0 "J" 0 100 50 H V C CNN
-F1 "rpi-hot-water-controller-rescue_Screw_Terminal_01x02" 0 -200 50 H V C CNN
+F1 "Screw_Terminal_01x02" 0 -200 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -996,11 +883,11 @@ X Pin_2 2 -200 -100 150 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# rpi-hot-water-controller-rescue_Screw_Terminal_01x03
+# Screw_Terminal_01x03
 #
-DEF rpi-hot-water-controller-rescue_Screw_Terminal_01x03 J 0 40 Y N 1 F N
+DEF Screw_Terminal_01x03 J 0 40 Y N 1 F N
 F0 "J" 0 200 50 H V C CNN
-F1 "rpi-hot-water-controller-rescue_Screw_Terminal_01x03" 0 -200 50 H V C CNN
+F1 "Screw_Terminal_01x03" 0 -200 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST

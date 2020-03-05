@@ -4,20 +4,26 @@
   "description": "Node.js/Express web-server and Angular client on Rapsberry PI",
   "main": "main.js",
   "scripts": {
-    "start":       "cd server; node dist/main.js",
-    "build":       "cd server; node_modules/gulp/bin/gulp.js --gulpfile gulpfile.js build",
-    "remote":      "cd server; node_modules/gulp/bin/gulp.js --gulpfile gulpfile.js remotePlatform",
+    "start": "cd server; node dist/main.js",
+    "build": "cd server; node_modules/gulp/bin/gulp.js --gulpfile gulpfile.js build",
+    "remote": "cd server; node_modules/gulp/bin/gulp.js --gulpfile gulpfile.js remotePlatform",
     "remote-init": "cd server; node_modules/gulp/bin/gulp.js --gulpfile gulpfile.js remoteInit",
-    "ngx-new":     "test -d ngx || ng new ngx; mkdir ngx/src/app/server;",
-    "ngx":         "test -d ngx || ng new ngx; cd ngx; mkdir src/app/server; ng build --prod",
-    "clean":       "cd server; node_modules/gulp/bin/gulp.js --gulpfile gulpfile.js clean",
-    "cleanall":    "cd server; node_modules/gulp/bin/gulp.js --gulpfile gulpfile.js cleanAll"
+    "ngx-new": "test -d ngx || ng new ngx; mkdir ngx/src/app/server;",
+    "ngx": "test -d ngx || ng new ngx; cd ngx; mkdir src/app/server; ng build --prod",
+    "clean": "cd server; node_modules/gulp/bin/gulp.js --gulpfile gulpfile.js clean",
+    "cleanall": "cd server; node_modules/gulp/bin/gulp.js --gulpfile gulpfile.js cleanAll"
   },
   "author": "Manfred Steiner",
   "repository": {},
   "license": "MIT",
   "dependencies": {
+    "@types/debug": "^4.1.5",
+    "debug-sx": "^0.2.4",
+    "nconf": "^0.10.0",
+    "sprintf-js": "^1.1.2"
   },
   "devDependencies": {
+    "@types/nconf": "^0.10.0",
+    "@types/sprintf-js": "^1.1.2"
   }
 }
