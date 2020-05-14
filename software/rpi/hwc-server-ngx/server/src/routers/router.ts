@@ -14,7 +14,8 @@ import { HotWaterController } from '../modbus/hot-water-controller';
 import { Controller } from '../controller';
 import { Server } from '../server';
 import { ControllerParameter, IControllerParameter } from '../data/common/hwc/controller-parameter';
-import { SmartModeValues } from '../data/common/hwc/smart-mode-values';
+import { SmartModeValues, ISmartModeValues } from '../data/common/hwc/smart-mode-values';
+import { IModbusSerialDeviceResetConfig } from '../modbus/modbus-serial-device';
 
 
 
@@ -55,15 +56,37 @@ export class Router {
             if (req.query && Object.getOwnPropertyNames(req.query).length > 0) {
                 debug.finer('monitor: query=%o', req.query);
                 const ctrl = Controller.getInstance();
-                const v = new SmartModeValues({
-                    createdAt: new Date(),
-                    eBatPercent: req.query.eBat,
-                    pBatWatt:    req.query.pBat,
-                    pGridWatt:   req.query.pGrid,
-                    pPvSouthWatt: req.query.pPvSouth,
-                    pPvEastWestWatt: req.query.pPvEastWest
-                });
-                ctrl.setSmartModeValues(v);
+                const x: ISmartModeValues = {
+                    createdAt:       null,
+                    eBatPercent:     null,
+                    pBatWatt:        null,
+                    pGridWatt:       null,
+                    pPvSouthWatt:    null,
+                    pPvEastWestWatt: null,
+                    pHeatSystemWatt: null,
+                    pOthersWatt:     null
+                };
+                for (const att of Object.getOwnPropertyNames(x)) {
+                    let v: number | string | undefined = req.query[att];
+                    if (att === 'createdAt' && typeof v === 'string') {
+                        v = +v;
+                    } else if (typeof v !== 'string') {
+                        switch (att) {
+                            case 'createdAt':       v = Date.now(); break;
+                            case 'eBatPercent':     v = null; break;
+                            case 'pBatWatt':        v = '0'; break;
+                            case 'pGridWatt':       v = '0'; break;
+                            case 'pPvSouthWatt':    v = '0'; break;
+                            case 'pPvEastWestWatt': v = '0'; break;
+                            case 'pHeatSystemWatt': v = '0'; break;
+                            case 'pOthersWatt':     v = '0'; break;
+                            default: v = null;
+                        }
+                    }
+                    (x as any)[att] = v;
+                }
+                const smv = new SmartModeValues(x);
+                ctrl.setSmartModeValues(smv);
             }
             const r = Monitor.getInstance().lastRecord;
             if (r) {
