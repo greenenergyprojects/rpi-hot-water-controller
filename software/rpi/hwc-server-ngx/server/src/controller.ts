@@ -185,7 +185,7 @@ export class Controller {
     }
 
     public async refresh () {
-        debug.finer('refresh');
+        debug.finer('refresh()): mode=%s', this._parameter.mode);
 
         if (this._smartModeValues) {
             if (Date.now() - this._smartModeValues.createdAt.getTime() > 60000) {
@@ -193,7 +193,6 @@ export class Controller {
             }
         }
 
-        debug.finest('refresh()): mode=%s', this._parameter.mode);
         switch (this._parameter.mode) {
             case 'off': {
                 this._mode = ControllerMode.off;
@@ -275,44 +274,53 @@ export class Controller {
                     this._setpointPower  = 0;
 
                 } else {
-                    if (this._smartModeValues.eBatPercent < p.minEBatPercent) {
-                        msgHeader += ': battery low (< ' + p.minEBatPercent + '% (min) )';
+                    const pBat = this._smartModeValues.pBatWatt;
+                    const pGrid = this._smartModeValues.pGridWatt;
+                    const eBatPct = this._smartModeValues.eBatPercent;
+
+                    let dP = 0;
+
+                    if (eBatPct < p.minEBatPercent) {
+                        msgHeader += '(1): battery low (< ' + p.minEBatPercent + '% (min) )';
                         this._setpointPower  = 0;
 
-                    } else if (this._smartModeValues.eBatPercent >= 99 && this._smartModeValues.pBatWatt > 100) {
-                        let dP = this._smartModeValues.pBatWatt * 0.05;
-                        if  (dP > 100) { dP = 100; }
-                        this._setpointPower = Math.round(this._setpointPower - dP);
-                        msgHeader += ': Full battery ' + this._smartModeValues.pBatWatt + 'W discharge (>100W)';
+                    } else if (eBatPct < 99) {
+                        if (pBat > 100) {
+                            msgHeader += '(2): battery OK, discharge too high (Pbat=' + pBat + 'W), decrease P';
+                            dP = -100;
+                        } else if (pBat < -100) {
+                            msgHeader += '(3): battery OK, charge too high (Pbat=' + pBat + 'W), increase P';
+                            dP = +100;
+                        } else {
+                            msgHeader += '(4): battery OK, low ' + (pBat > 0 ? 'charge' : 'discharge') + ' (Pbat=' + pBat + 'W), no change for P';
+                        }
 
-                    } else if (this._smartModeValues.eBatPercent < 99 && this._smartModeValues.pBatWatt > 0) {
-                        let dP = this._smartModeValues.pBatWatt * 0.05;
-                        if  (dP > 100) { dP = 100; }
-                        this._setpointPower = Math.round(this._setpointPower - dP);
-                        msgHeader += ': battery ' + this._smartModeValues.pBatWatt + 'W discharge (>0W)';
-
-                    } else if (this._smartModeValues.pBatWatt < -100) {
-                        let dP = this._smartModeValues.pBatWatt * -0.01;
-                        if  (dP > 100) { dP = 100; }
-                        this._setpointPower = Math.round(this._setpointPower + dP);
-                        msgHeader += ': battery ' + this._smartModeValues.pBatWatt + 'W charge (>100W)';
-
-                    } else if (this._smartModeValues.pGridWatt < -50) {
-                        let dP = this._smartModeValues.pGridWatt * -0.05;
-                        if  (dP > 200) { dP = 200; }
-                        this._setpointPower = Math.round(this._setpointPower + dP);
-                        msgHeader += ': ' + ((-1) * this._smartModeValues.pGridWatt) + 'W to grid (>50W)';
-
-                    } else if (this._smartModeValues.pGridWatt > 50) {
-                        let dP = this._smartModeValues.pGridWatt * 0.05;
-                        if  (dP > 100) { dP = 100; }
-                        this._setpointPower = Math.round(this._setpointPower - dP);
-                        msgHeader += ': ' + this._smartModeValues.pGridWatt + 'W from grid (>50W)';
+                    } else if (this._activePower > 0 || this._setpointPower < 300) {
+                        if (pGrid > -10) {
+                            msgHeader += '(5): battery full, grid -> home (Pgrid=' + pGrid + 'W), decrease P';
+                            dP = pGrid > 100 ? pGrid * -1 : pGrid * -0.1;
+                        } else if (pGrid < -100) {
+                            msgHeader += '(6): battery full, grid <- home (Pgrid=' + pGrid + 'W), increase P';
+                            dP = pGrid * -0.1;
+                        } else {
+                            msgHeader += '(7): battery full, grid  ~ home (Pgrid=' + pGrid + 'W), no change for P';
+                        }
 
                     } else {
-                        msgHeader += ': no changes';
+                        if (pGrid < -300) {
+                            msgHeader += '(8): battery full, boiler full, grid ---> home (Pgrid=' + pGrid + 'W), set P';
+                            this._setpointPower = -pGrid;
+                        } else if (pBat > 300) {
+                            msgHeader += '(8): battery full, boiler full, batt <--- home (Pbat=' + pBat + 'W), set P';
+                            this._setpointPower = pBat;
+                        } else {
+                            msgHeader += '(8): battery full, boiler full, available power low (Pbat=' + pBat + 'W, Pgrid=' + pGrid + 'W), set P=300W';
+                            this._setpointPower = 300;
+                        }
                     }
-
+                    if (dP < 0 && dP > -1 ) { dP = -1; }
+                    if (dP > 0 && dP <  1 ) { dP =  1; }
+                    this._setpointPower += dP;
                     if (this._setpointPower < p.minWatts) {
                         this._setpointPower = p.minWatts;
                         debug.finer('mode smart: limit P => P = %dW', this._setpointPower );
