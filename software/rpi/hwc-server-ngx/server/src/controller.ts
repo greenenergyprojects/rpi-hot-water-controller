@@ -296,25 +296,31 @@ export class Controller {
                         }
 
                     } else if (this._activePower > 0 || this._setpointPower < 300) {
-                        if (pGrid > -10) {
-                            msgHeader += '(5): battery full, grid -> home (Pgrid=' + pGrid + 'W), decrease P';
-                            dP = pGrid > 100 ? pGrid * -1 : pGrid * -0.1;
+                        if (pGrid > 200) {
+                            msgHeader += '(5): battery full, grid -> home (Pgrid=' + pGrid + 'W), decrease P (-200W)';
+                            dP = -200;
+
+                        } else if (pGrid > -10) {
+                            msgHeader += '(6): battery full, grid -> home (Pgrid=' + pGrid + 'W), decrease P';
+                            dP = -20;
+
                         } else if (pGrid < -100) {
-                            msgHeader += '(6): battery full, grid <- home (Pgrid=' + pGrid + 'W), increase P';
-                            dP = pGrid * -0.1;
+                            msgHeader += '(7): battery full, grid <- home (Pgrid=' + pGrid + 'W), increase P';
+                            dP = 20;
+
                         } else {
-                            msgHeader += '(7): battery full, grid  ~ home (Pgrid=' + pGrid + 'W), no change for P';
+                            msgHeader += '(8): battery full, grid  ~ home (Pgrid=' + pGrid + 'W), no change for P';
                         }
 
                     } else {
                         if (pGrid < -300) {
-                            msgHeader += '(8): battery full, boiler full, grid ---> home (Pgrid=' + pGrid + 'W), set P';
+                            msgHeader += ' (9): battery full, boiler full, grid ---> home (Pgrid=' + pGrid + 'W), set P';
                             this._setpointPower = -pGrid;
                         } else if (pBat > 300) {
-                            msgHeader += '(8): battery full, boiler full, batt <--- home (Pbat=' + pBat + 'W), set P';
+                            msgHeader += ' (10): battery full, boiler full, batt <--- home (Pbat=' + pBat + 'W), set P';
                             this._setpointPower = pBat;
                         } else {
-                            msgHeader += '(8): battery full, boiler full, available power low (Pbat=' + pBat + 'W, Pgrid=' + pGrid + 'W), set P=300W';
+                            msgHeader += '(11): battery full, boiler full, available power low (Pbat=' + pBat + 'W, Pgrid=' + pGrid + 'W), set P=300W';
                             this._setpointPower = 300;
                         }
                     }
@@ -323,11 +329,11 @@ export class Controller {
                     this._setpointPower += dP;
                     if (this._setpointPower < p.minWatts) {
                         this._setpointPower = p.minWatts;
-                        debug.finer('mode smart: limit P => P = %dW', this._setpointPower );
+                        msgHeader += '(limit to min)';
                     }
                     if (this._setpointPower > p.maxWatts) {
                         this._setpointPower = p.maxWatts;
-                        debug.finer('mode smart: limit P => P = %dW', this._setpointPower );
+                        msgHeader += '(limit to max)';
                     }
                     this._setpointPower = Math.round(this._setpointPower);
                     debug.finer('%s => P = %dW', msgHeader, this._setpointPower);
