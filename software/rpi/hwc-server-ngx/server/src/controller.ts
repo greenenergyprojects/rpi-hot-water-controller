@@ -234,32 +234,32 @@ export class Controller {
                 if (this._smartModeValues.pPvEastWestWatt === null) { debug.warn('pPvEastWestWatt not available'); }
 
                 if (!this._smartModeValues || !p) {
-                    debug.finer('%s: no values available => P = 0W', msgHeader);
+                    debug.finer('%s (1.1): no values available => P = 0W', msgHeader);
                     this._setpointPower  = 0;
 
                 } else if (this._smartModeValues.pGridWatt === null || this._smartModeValues.pBatWatt === null || this._smartModeValues.eBatPercent === null ||
                            this._smartModeValues.pPvSouthWatt === null || this._smartModeValues.pPvEastWestWatt === null) {
-                    debug.finer('%s: some values are not available => P = 0W', msgHeader);
+                    debug.finer('%s (2.1): some values are not available => P = 0W', msgHeader);
                     this._setpointPower  = 0;
 
                 } else if (isFroniusMeterDefect) {
                     msgHeader += ' - fronius meter defect';
                     if (this._smartModeValues.eBatPercent < p.minEBatPercent) {
-                        debug.finer('%s: fronius meter defect, battery low (< %d%\% (min) ) => P = 0W', msgHeader, p.minEBatPercent);
+                        debug.finer('%s (3.1): fronius meter defect, battery low (< %d%\% (min) ) => P = 0W', msgHeader, p.minEBatPercent);
                         this._setpointPower = 0;
                     } else {
                         const pNotNeeded = this._smartModeValues.pPvSouthWatt + this._smartModeValues.pPvEastWestWatt + this._smartModeValues.pBatWatt
                                            - this._smartModeValues.pHeatSystemWatt - this._smartModeValues.pOthersWatt;
                         const pAvailable = pNotNeeded - (p.minWatts > 200 ? p.minWatts : 250) - this._setpointPower;
-                        debug.warn('%s: availaible power = %d', msgHeader, pAvailable);
+                        debug.warn('%s (4.1): availaible power = %d', msgHeader, pAvailable);
                         if (pAvailable < 0) {
                             this._setpointPower = Math.round(this._setpointPower - 100);
-                            debug.finer('%s: decrease setpoint power to %dW', msgHeader, this._setpointPower);
+                            debug.finer('%s (4.2): decrease setpoint power to %dW', msgHeader, this._setpointPower);
                         } else if (pAvailable > 100) {
                             this._setpointPower = Math.round(this._setpointPower + 100);
-                            debug.finer('%s: increase setpoint power to %dW', msgHeader, this._setpointPower);
+                            debug.finer('%s (4.3): increase setpoint power to %dW', msgHeader, this._setpointPower);
                         } else {
-                            debug.finer('%s: setpoint power %dW not changed', msgHeader, this._setpointPower);
+                            debug.finer('%s (4.4): setpoint power %dW not changed', msgHeader, this._setpointPower);
                         }
                         if (this._setpointPower < 0) {
                             this._setpointPower = 0;
@@ -270,57 +270,91 @@ export class Controller {
                     }
 
                 } else if (this._smartModeValues.pGridWatt === null || this._smartModeValues.pBatWatt === null || this._smartModeValues.eBatPercent === null) {
-                    debug.finer('%s: some values are not available => P = 0W', msgHeader);
+                    debug.finer('%s (5.1): some values are not available => P = 0W', msgHeader);
                     this._setpointPower  = 0;
 
                 } else {
                     const pBat = this._smartModeValues.pBatWatt;
                     const pGrid = this._smartModeValues.pGridWatt;
                     const eBatPct = this._smartModeValues.eBatPercent;
+                    const pAvail = -pGrid - pBat;
+                    msgHeader += ' Pavail=' + pAvail + 'W => ';
 
                     let dP = 0;
 
                     if (eBatPct < p.minEBatPercent) {
-                        msgHeader += '(1): battery low (< ' + p.minEBatPercent + '% (min) )';
+                        msgHeader += '(6.1): battery low (< ' + p.minEBatPercent + '% (min) )';
                         this._setpointPower  = 0;
 
                     } else if (eBatPct < 99) {
-                        if (pBat > 100) {
-                            msgHeader += '(2): battery OK, discharge too high (Pbat=' + pBat + 'W), decrease P';
+                        const batStatus = (pBat < 0 ? 'charge' : 'discharge');
+                        const sPower = '(Pgrid=' + pGrid + 'W, Pbat=' + pBat + 'W ' + batStatus + ')';
+
+                        if (pGrid > 200) {
+                            msgHeader += '(7.1): battery ok ' + sPower + ', decrease P (-20W)';
+                            dP = -20;
+
+                        } else if (pGrid > 10) {
+                            msgHeader += '(7.2): battery ok ' + sPower + ', decrease P (-5W)';
+                            dP = -5;
+
+                        } else if (pAvail > 200) {
+                            msgHeader += '(7.3): battery ok ' + sPower + ', increase P (+10W)';
+                            dP = 10;
+
+                        } else if (pAvail < -200) {
+                            msgHeader += '(7.4): battery ok ' + sPower + ', decrease P (-100W)';
                             dP = -100;
-                        } else if (pBat < -100) {
-                            msgHeader += '(3): battery OK, charge too high (Pbat=' + pBat + 'W), increase P';
-                            dP = +100;
+
+                        } else if (pAvail > 30) {
+                            msgHeader += '(7.5): battery ok ' + sPower + ', increase P (+5W)';
+                            dP = 5;
+
+                        } else if (pAvail < -30) {
+                            msgHeader += '(7.6): battery ok ' + sPower + ', decrease P (-25)';
+                            dP = -10;
+
                         } else {
-                            msgHeader += '(4): battery OK, low ' + (pBat > 0 ? 'charge' : 'discharge') + ' (Pbat=' + pBat + 'W), no change for P';
+                            msgHeader += '(7.7): battery ok ' + sPower + ', no change for P';
                         }
+
+
+                        // if (pBat > 100) {
+                        //     msgHeader += '(2): battery OK, discharge too high (Pbat=' + pBat + 'W), decrease P';
+                        //     dP = -100;
+                        // } else if (pBat < -100) {
+                        //     msgHeader += '(3): battery OK, charge too high (Pbat=' + pBat + 'W), increase P';
+                        //     dP = +100;
+                        // } else {
+                        //     msgHeader += '(4): battery OK, low ' + (pBat > 0 ? 'charge' : 'discharge') + ' (Pbat=' + pBat + 'W), no change for P';
+                        // }
 
                     } else if (this._activePower > 0 || this._setpointPower < 300) {
                         if (pGrid > 200) {
-                            msgHeader += '(5): battery full, grid -> home (Pgrid=' + pGrid + 'W), decrease P (-200W)';
+                            msgHeader += '(8.1): battery full, grid -> home (Pgrid=' + pGrid + 'W), decrease P (-200W)';
                             dP = -200;
 
                         } else if (pGrid > -10) {
-                            msgHeader += '(6): battery full, grid -> home (Pgrid=' + pGrid + 'W), decrease P';
+                            msgHeader += '(8.2): battery full, grid -> home (Pgrid=' + pGrid + 'W), decrease P';
                             dP = -20;
 
                         } else if (pGrid < -100) {
-                            msgHeader += '(7): battery full, grid <- home (Pgrid=' + pGrid + 'W), increase P';
+                            msgHeader += '(8.3): battery full, grid <- home (Pgrid=' + pGrid + 'W), increase P';
                             dP = 20;
 
                         } else {
-                            msgHeader += '(8): battery full, grid  ~ home (Pgrid=' + pGrid + 'W), no change for P';
+                            msgHeader += '(8.4): battery full, grid  ~ home (Pgrid=' + pGrid + 'W), no change for P';
                         }
 
                     } else {
                         if (pGrid < -300) {
-                            msgHeader += ' (9): battery full, boiler full, grid ---> home (Pgrid=' + pGrid + 'W), set P';
+                            msgHeader += ' (9.1): battery full, boiler full, grid ---> home (Pgrid=' + pGrid + 'W), set P';
                             this._setpointPower = -pGrid;
                         } else if (pBat > 300) {
-                            msgHeader += ' (10): battery full, boiler full, batt <--- home (Pbat=' + pBat + 'W), set P';
+                            msgHeader += ' (9.2): battery full, boiler full, batt <--- home (Pbat=' + pBat + 'W), set P';
                             this._setpointPower = pBat;
                         } else {
-                            msgHeader += '(11): battery full, boiler full, available power low (Pbat=' + pBat + 'W, Pgrid=' + pGrid + 'W), set P=300W';
+                            msgHeader += '(9.3): battery full, boiler full, available power low (Pbat=' + pBat + 'W, Pgrid=' + pGrid + 'W), set P=300W';
                             this._setpointPower = 300;
                         }
                     }
