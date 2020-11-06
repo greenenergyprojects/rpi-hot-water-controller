@@ -11,10 +11,11 @@ import { HotWaterController } from './modbus/hot-water-controller';
 import { sprintf } from 'sprintf-js';
 import { ControllerParameter, IControllerParameter } from './data/common/hwc/controller-parameter';
 import { IControllerStatus, ControllerStatus } from './data/common/hwc/controller-status';
-import { SmartModeParameter } from './data/common/hwc/smart-mode-parameter';
-import { SmartModeValues } from './data/common/hwc/smart-mode-values';
+import { ISmartModeParameter, SmartModeParameter } from './data/common/hwc/smart-mode-parameter';
+import { ISmartModeValues, SmartModeValues } from './data/common/hwc/smart-mode-values';
 import { ControllerMode } from './data/common/hwc/controller-mode';
 import { IValue } from './data/common/hwc/value';
+import { reverse } from 'dns';
 
 interface IControllerConfig {
     startMode: 'off' | 'on' | 'power' | 'smart' | 'test';
@@ -48,14 +49,15 @@ export class Controller {
 
     // ************************************************
 
-    private _config:         IControllerConfig;
-    private _parameter:      ControllerParameter;
-    private _mode:           ControllerMode;
-    private _smartModeValues:    SmartModeValues;
-    private _setpointPower:  number;
-    private _activePower:    number;
-    private _energyDaily:    number;
-    private _energyTotal:    number;
+    private _config:              IControllerConfig;
+    private _parameter:           ControllerParameter;
+    private _mode:                ControllerMode;
+    private _smartModeValues:     SmartModeValues;
+    private _setpointPower:       number;
+    private _lastSetPointPowerAt: number;
+    private _activePower:         number;
+    private _energyDaily:         number;
+    private _energyTotal:         number;
 
     private _lastRefresh: { at: Date, activePower: number };
     private _timer: NodeJS.Timer;
@@ -184,109 +186,161 @@ export class Controller {
         this._energyDaily = value;
     }
 
-    public async refresh () {
-        debug.finer('refresh()): mode=%s', this._parameter.mode);
+    public calcSetpointPower (): number {
+        let rv = this._setpointPower;
+        if (typeof rv !== 'number' || rv < 0)  {
+            debug.warn('invalid value setpointPower %s, setting to 0', );
+            rv = 0;
+        }
 
-        if (this._smartModeValues) {
-            if (Date.now() - this._smartModeValues.createdAt.getTime() > 60000) {
-                this._smartModeValues = null;
+        const activePower = typeof this._setpointPower === 'number' ? this._activePower : 0.0;
+        let pBat = 0;
+        let pGrid = 0;
+        let eBatPct = 0;
+        let pPvSouth = 0;
+        let pPvEastWest = 0;
+        let pHeatSystem = 0;
+        let pOthers = 0;
+
+        const p: IControllerParameter = this._parameter ? this._parameter :
+            {
+                createdAt: Date.now(),
+                from: 'calcSetpointPower',
+                mode: ControllerMode.off,
+                desiredWatts: 0,
+                smart: { minEBatPercent: 100, minWatts: 0, maxWatts: 0 }
+            };
+        let msgHeader = '';
+
+        if (!this._smartModeValues) {
+             debug.warn('smartModeValues not availables');
+        } else {
+            debug.finest('%s: %o %o', p.mode, p, this._smartModeValues);
+            if (typeof this._smartModeValues.pBatWatt === 'number') {
+                pBat = this._smartModeValues.pBatWatt;
+            } else {
+                debug.warn('pBatWatt not available');
+            }
+            if (typeof this._smartModeValues.pGridWatt === 'number') {
+                pGrid = this._smartModeValues.pGridWatt;
+            } else {
+                debug.warn('pGridWatt not available');
+            }
+            if (typeof this._smartModeValues.eBatPercent === 'number') {
+                eBatPct = this._smartModeValues.eBatPercent;
+            } else {
+                debug.warn('eBatPercent not available');
+            }
+            if (typeof this._smartModeValues.pPvSouthWatt === 'number') {
+                pPvSouth = this._smartModeValues.pPvSouthWatt;
+            } else {
+                debug.warn('pPvSouthWatt not available');
+            }
+            if (typeof this._smartModeValues.pPvEastWestWatt === 'number') {
+                pPvEastWest = this._smartModeValues.pPvEastWestWatt;
+            } else {
+                debug.warn('pPvEastWestWatt not available');
+            }
+            if (typeof this._smartModeValues.pHeatSystemWatt === 'number') {
+                pHeatSystem = this._smartModeValues.pHeatSystemWatt;
+            } else {
+                debug.warn('pHeatSystemWatt not available');
+            }
+            if (typeof this._smartModeValues.pOthersWatt === 'number') {
+                pOthers = this._smartModeValues.pOthersWatt;
+            } else {
+                debug.warn('pOthersWatt not available');
             }
         }
 
-        switch (this._parameter.mode) {
+        switch (p.mode) {
             case 'off': {
                 this._mode = ControllerMode.off;
-                this._setpointPower = 0;
+                rv = 0;
                 break;
             }
 
             case 'on': {
                 this._mode = ControllerMode.on;
-                this._setpointPower = 2000;
+                msgHeader = 'mode on: P=2000W';
+                rv = 2000;
                 break;
             }
 
             case 'power': {
                 this._mode = ControllerMode.power;
-                this._setpointPower = this._parameter.desiredWatts;
-                if (this._setpointPower < this._parameter.minWatts) {
-                    this._setpointPower = this._parameter.minWatts;
+                const min = typeof p.minWatts === 'number' && p.minWatts >= 0 ? p.minWatts : 0;
+                const max = typeof p.maxWatts === 'number' && p.maxWatts >= 0 ? p.maxWatts : 2000;
+                if (typeof p.desiredWatts !== 'number') {
+                    msgHeader += 'desiredWatts not valid, set power to 0W';
+                    rv = 0;
+                } else {
+                    if (p.desiredWatts > rv) {
+                        rv += 25; // step slowly high to avoid power from grid (slow battery response)
+                    } else {
+                        rv = p.desiredWatts;
+                    }
                 }
-                if (this._setpointPower > this._parameter.maxWatts) {
-                    this._setpointPower = this._parameter.maxWatts;
+                if (rv < min) {
+                    rv = min;
                 }
+                if (rv > max) {
+                    rv = max;
+                }
+                msgHeader = 'mode power: desired P=' + p.desiredWatts + 'W';
                 break;
             }
 
             case 'smart': {
-                const isFroniusMeterDefect = this._config.froniusMeterDefect === true;
                 this._mode = ControllerMode.smart;
-                const p = this._parameter && this._parameter.smart;
-                let msgHeader = 'mode smart (Bat ' + this._smartModeValues.eBatPercent + '%)';
-                debug.finest('smart: %o %o', p, this._smartModeValues);
-
-                if (!p) { debug.warn('no parameter available'); }
-                if (!this._smartModeValues) { debug.warn('smartModeValues not availables'); }
-                if (this._smartModeValues.pGridWatt === null) { debug.warn('pGridWatt not available'); }
-                if (this._smartModeValues.pBatWatt === null) { debug.warn('pBatWatt not available'); }
-                if (this._smartModeValues.eBatPercent === null) { debug.warn('eBatPercent not available'); }
-                if (this._smartModeValues.pPvSouthWatt === null) { debug.warn('pPvSouthWatt not available'); }
-                if (this._smartModeValues.pPvEastWestWatt === null) { debug.warn('pPvEastWestWatt not available'); }
-
-                if (!this._smartModeValues || !p) {
-                    debug.finer('%s (1.1): no values available => P = 0W', msgHeader);
-                    this._setpointPower  = 0;
-
-                } else if (this._smartModeValues.pGridWatt === null || this._smartModeValues.pBatWatt === null || this._smartModeValues.eBatPercent === null ||
-                           this._smartModeValues.pPvSouthWatt === null || this._smartModeValues.pPvEastWestWatt === null) {
-                    debug.finer('%s (2.1): some values are not available => P = 0W', msgHeader);
-                    this._setpointPower  = 0;
-
-                } else if (isFroniusMeterDefect) {
-                    msgHeader += ' - fronius meter defect';
-                    if (this._smartModeValues.eBatPercent < p.minEBatPercent) {
-                        debug.finer('%s (3.1): fronius meter defect, battery low (< %d%\% (min) ) => P = 0W', msgHeader, p.minEBatPercent);
-                        this._setpointPower = 0;
+                msgHeader = 'mode smart (Bat ' + eBatPct + '%)';
+                const isFroniusMeterDefect = this._config.froniusMeterDefect === true;
+                if (!p || !p.smart) {
+                    msgHeader += '(1.1): no parameter available => P = 0W';
+                    rv  = 0;
+                    break;
+                }
+                const pSmart: ISmartModeParameter = p.smart ? p.smart : { minEBatPercent: 100, minWatts: 0, maxWatts: 0 };
+                const pbatMin = typeof pSmart.minPBatLoadWatts === 'number' && pSmart.minPBatLoadWatts >= 0 ? pSmart.minPBatLoadWatts : 0;
+                msgHeader += ' PBatMin=' +  pbatMin + 'W => ';
+                if (isFroniusMeterDefect) {
+                    msgHeader += ' - fronius meter defect - ';
+                    if (eBatPct <= pSmart.minEBatPercent) {
+                        msgHeader += '(3.1): battery low (< ' + pSmart.minEBatPercent + '% (min) )';
+                        rv = 0;
                     } else {
-                        const pNotNeeded = this._smartModeValues.pPvSouthWatt + this._smartModeValues.pPvEastWestWatt + this._smartModeValues.pBatWatt
-                                           - this._smartModeValues.pHeatSystemWatt - this._smartModeValues.pOthersWatt;
-                        const pAvailable = pNotNeeded - (p.minWatts > 200 ? p.minWatts : 250) - this._setpointPower;
-                        debug.warn('%s (4.1): availaible power = %d', msgHeader, pAvailable);
+                        const pNotNeeded = pPvSouth + pPvEastWest + pBat - pHeatSystem - pOthers - pbatMin;
+                        const pAvailable = pNotNeeded - (pSmart.minWatts > 250 ? pSmart.minWatts : 250) - rv;
+                        msgHeader += sprintf('(4.1): availaible power = %d', pAvailable);
                         if (pAvailable < 0) {
-                            this._setpointPower = Math.round(this._setpointPower - 100);
-                            debug.finer('%s (4.2): decrease setpoint power to %dW', msgHeader, this._setpointPower);
+                            rv = rv - 100;
+                            msgHeader += sprintf('(4.2): decrease setpoint power to %dW', rv);
                         } else if (pAvailable > 100) {
-                            this._setpointPower = Math.round(this._setpointPower + 100);
-                            debug.finer('%s (4.3): increase setpoint power to %dW', msgHeader, this._setpointPower);
+                            rv = rv + 100;
+                            msgHeader += sprintf('(4.3): increase setpoint power to %dW', rv);
                         } else {
-                            debug.finer('%s (4.4): setpoint power %dW not changed', msgHeader, this._setpointPower);
+                            msgHeader += sprintf('(4.4): setpoint power %dW not changed', rv);
                         }
-                        if (this._setpointPower < 0) {
-                            this._setpointPower = 0;
-                        } else  if (this._setpointPower > p.maxWatts) {
-                            this._setpointPower = p.maxWatts;
+                        if (rv < 0) {
+                            rv = 0;
+                            msgHeader += sprintf(' limit to 0W');
+                        } else if (rv > pSmart.maxWatts) {
+                            rv = pSmart.maxWatts;
+                            msgHeader += sprintf(' limit to %dW', rv);
                         }
-                        this._setpointPower = Math.round(this._setpointPower);
                     }
 
-                } else if (this._smartModeValues.pGridWatt === null || this._smartModeValues.pBatWatt === null || this._smartModeValues.eBatPercent === null) {
-                    debug.finer('%s (5.1): some values are not available => P = 0W', msgHeader);
-                    this._setpointPower  = 0;
+                } else if (eBatPct <= pSmart.minEBatPercent) {
+                    msgHeader += '(6.1): battery low (< ' + pSmart.minEBatPercent + '% (min) )';
+                    rv  = 0;
 
                 } else {
-                    const pBat = this._smartModeValues.pBatWatt;
-                    const pGrid = this._smartModeValues.pGridWatt;
-                    const eBatPct = this._smartModeValues.eBatPercent;
-                    const pAvail = -pGrid - pBat;
+                    const pAvail = -pGrid - pBat - pbatMin;
                     msgHeader += ' Pavail=' + pAvail + 'W => ';
 
                     let dP = 0;
 
-                    if (eBatPct < p.minEBatPercent) {
-                        msgHeader += '(6.1): battery low (< ' + p.minEBatPercent + '% (min) )';
-                        this._setpointPower  = 0;
-
-                    } else if (eBatPct < 99) {
+                    if (eBatPct < 99) {
                         const batStatus = (pBat < 0 ? 'charge' : 'discharge');
                         const sPower = '(Pgrid=' + pGrid + 'W, Pbat=' + pBat + 'W ' + batStatus + ')';
 
@@ -294,7 +348,7 @@ export class Controller {
                             msgHeader += '(7.1): battery ok ' + sPower + ', decrease P (-20W)';
                             dP = -20;
 
-                        } else if (pGrid > 10) {
+                        } else if (pGrid > 100) {
                             msgHeader += '(7.2): battery ok ' + sPower + ', decrease P (-5W)';
                             dP = -5;
 
@@ -314,22 +368,15 @@ export class Controller {
                             msgHeader += '(7.6): battery ok ' + sPower + ', decrease P (-25)';
                             dP = -10;
 
+                        } else if (pGrid > 10) {
+                            msgHeader += '(7.7): battery ok ' + sPower + ', decrease P (-5W)';
+                            dP = -5;
+
                         } else {
                             msgHeader += '(7.7): battery ok ' + sPower + ', no change for P';
                         }
 
-
-                        // if (pBat > 100) {
-                        //     msgHeader += '(2): battery OK, discharge too high (Pbat=' + pBat + 'W), decrease P';
-                        //     dP = -100;
-                        // } else if (pBat < -100) {
-                        //     msgHeader += '(3): battery OK, charge too high (Pbat=' + pBat + 'W), increase P';
-                        //     dP = +100;
-                        // } else {
-                        //     msgHeader += '(4): battery OK, low ' + (pBat > 0 ? 'charge' : 'discharge') + ' (Pbat=' + pBat + 'W), no change for P';
-                        // }
-
-                    } else if (this._activePower > 0 || this._setpointPower < 300) {
+                    } else if (activePower > 0 || rv < 300) {
                         if (pGrid > 200) {
                             msgHeader += '(8.1): battery full, grid -> home (Pgrid=' + pGrid + 'W), decrease P (-200W)';
                             dP = -200;
@@ -347,30 +394,28 @@ export class Controller {
                         }
 
                     } else {
-                        if (pGrid < -300) {
+                        if (pGrid < -200) {
                             msgHeader += ' (9.1): battery full, boiler full, grid ---> home (Pgrid=' + pGrid + 'W), set P';
-                            this._setpointPower = -pGrid;
-                        } else if (pBat > 300) {
+                            rv = -200;
+                        } else if (pBat > 200) {
                             msgHeader += ' (9.2): battery full, boiler full, batt <--- home (Pbat=' + pBat + 'W), set P';
-                            this._setpointPower = pBat;
+                            rv = rv + 50;
                         } else {
                             msgHeader += '(9.3): battery full, boiler full, available power low (Pbat=' + pBat + 'W, Pgrid=' + pGrid + 'W), set P=300W';
-                            this._setpointPower = 300;
+                            rv = Math.min(pGrid, 300);
                         }
                     }
                     if (dP < 0 && dP > -1 ) { dP = -1; }
                     if (dP > 0 && dP <  1 ) { dP =  1; }
-                    this._setpointPower += dP;
-                    if (this._setpointPower < p.minWatts) {
-                        this._setpointPower = p.minWatts;
+                    rv += dP;
+                    if (rv < pSmart.minWatts) {
+                        rv = pSmart.minWatts;
                         msgHeader += '(limit to min)';
                     }
-                    if (this._setpointPower > p.maxWatts) {
-                        this._setpointPower = p.maxWatts;
+                    if (rv > pSmart.maxWatts) {
+                        rv = pSmart.maxWatts;
                         msgHeader += '(limit to max)';
                     }
-                    this._setpointPower = Math.round(this._setpointPower);
-                    debug.finer('%s => P = %dW', msgHeader, this._setpointPower);
                 }
                 break;
             }
@@ -382,6 +427,35 @@ export class Controller {
             }
         }
 
+        rv = Math.round(rv);
+        if (msgHeader) {
+            debug.finer(sprintf('Pset = %4dW -- %s', rv, msgHeader ));
+        }
+
+        return rv;
+    }
+
+    public async refresh () {
+        debug.finest('refresh()): mode=%s', this._parameter.mode);
+
+        if (this._smartModeValues) {
+            if (Date.now() - this._smartModeValues.createdAt.getTime() > 60000) {
+                this._smartModeValues = null;
+                debug.warn('no _smartModeValues available');
+            }
+        }
+
+        try {
+            this._setpointPower = this.calcSetpointPower();
+            this._lastSetPointPowerAt = Date.now();
+        } catch (err) {
+            debug.warn('calculation setpoint power fails\n%e', err);
+            if (Date.now() - this._lastSetPointPowerAt > 20000) {
+                debug.warn('refreshing _setpointPower fails (timeout 20s), setting to 0');
+                this._setpointPower = 0;
+                this._lastSetPointPowerAt = Date.now();
+            }
+        }
 
         const hwctrl = HotWaterController.getInstance();
         await hwctrl.writeActivePower(this._setpointPower);
