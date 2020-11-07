@@ -12,7 +12,7 @@ import { sprintf } from 'sprintf-js';
 import { ControllerParameter, IControllerParameter } from './data/common/hwc/controller-parameter';
 import { IControllerStatus, ControllerStatus } from './data/common/hwc/controller-status';
 import { ISmartModeParameter, SmartModeParameter } from './data/common/hwc/smart-mode-parameter';
-import { ISmartModeValues, SmartModeValues } from './data/common/hwc/smart-mode-values';
+import { BatStateType, ISmartModeValues, SmartModeValues } from './data/common/hwc/smart-mode-values';
 import { ControllerMode } from './data/common/hwc/controller-mode';
 import { IValue } from './data/common/hwc/value';
 import { reverse } from 'dns';
@@ -171,7 +171,7 @@ export class Controller {
         return this.getStatus();
     }
 
-    public setSmartModeValues (values: SmartModeValues) {
+    public setSmartModeValues (source: string, values: SmartModeValues) {
         this._smartModeValues = values;
     }
 
@@ -185,6 +185,7 @@ export class Controller {
         this._lastRefresh = { at: at, activePower: null };
         this._energyDaily = value;
     }
+
 
     public calcSetpointPower (): number {
         let rv = this._setpointPower;
@@ -201,6 +202,7 @@ export class Controller {
         let pPvEastWest = 0;
         let pHeatSystem = 0;
         let pOthers = 0;
+        let batState: BatStateType = 'UNKNOWN';
 
         const p: IControllerParameter = this._parameter ? this._parameter :
             {
@@ -250,6 +252,9 @@ export class Controller {
                 pOthers = this._smartModeValues.pOthersWatt;
             } else {
                 debug.warn('pOthersWatt not available');
+            }
+            if (this._smartModeValues.batState) {
+                batState = this._smartModeValues.batState;
             }
         }
 
@@ -301,7 +306,13 @@ export class Controller {
                     break;
                 }
                 const pSmart: ISmartModeParameter = p.smart ? p.smart : { minEBatPercent: 100, minWatts: 0, maxWatts: 0 };
-                const pbatMin = typeof pSmart.minPBatLoadWatts === 'number' && pSmart.minPBatLoadWatts >= 0 ? pSmart.minPBatLoadWatts : 0;
+                let pbatMin = 0;
+                msgHeader += ' Bat ' + batState;
+                if (batState === 'FULL' || batState === 'HOLDING') {
+                    pbatMin = 0;
+                } else {
+                    pbatMin = typeof pSmart.minPBatLoadWatts === 'number' && pSmart.minPBatLoadWatts >= 0 ? pSmart.minPBatLoadWatts : 0;
+                }
                 msgHeader += ' PBatMin=' +  pbatMin + 'W => ';
                 if (isFroniusMeterDefect) {
                     msgHeader += ' - fronius meter defect - ';
@@ -310,7 +321,7 @@ export class Controller {
                         rv = 0;
                     } else {
                         const pNotNeeded = pPvSouth + pPvEastWest + pBat - pHeatSystem - pOthers - pbatMin;
-                        const pAvailable = pNotNeeded - (pSmart.minWatts > 250 ? pSmart.minWatts : 250) - rv;
+                        const pAvailable = this.filterAvailablePower(pNotNeeded - (pSmart.minWatts > 250 ? pSmart.minWatts : 250) - rv);
                         msgHeader += sprintf('(4.1): availaible power = %d', pAvailable);
                         if (pAvailable < 0) {
                             rv = rv - 100;
@@ -335,7 +346,7 @@ export class Controller {
                     rv  = 0;
 
                 } else {
-                    const pAvail = -pGrid - pBat - pbatMin;
+                    const pAvail = this.filterAvailablePower(-pGrid - pBat - pbatMin);
                     msgHeader += ' Pavail=' + pAvail + 'W => ';
 
                     let dP = 0;
@@ -508,5 +519,20 @@ export class Controller {
             debug.warn('%e', err);
         }
     }
+
+    // tslint:disable-next-line: member-ordering
+    private _availPowerFilter: { a: number, ewma: number } = {
+        a: 0.1,
+        ewma: 0
+    };
+
+    private filterAvailablePower (p: number): number {
+        // EWMA filter for available power, because fronius battery management jumpy
+        const f = this._availPowerFilter;
+        f.ewma = f.a * p + (1 - f.a) * (f.ewma);
+        return Math.round(f.ewma);
+    }
+
+
 
 }

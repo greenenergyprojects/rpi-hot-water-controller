@@ -54,7 +54,7 @@ export class Router {
         try {
             const rv: IMonitorRecord [] = [];
             if (req.query && Object.getOwnPropertyNames(req.query).length > 0) {
-                debug.finer('monitor: query=%o', req.query);
+                debug.finest('monitor: query=%o', req.query);
                 const ctrl = Controller.getInstance();
                 const x: ISmartModeValues = {
                     createdAt:       null,
@@ -64,7 +64,8 @@ export class Router {
                     pPvSouthWatt:    null,
                     pPvEastWestWatt: null,
                     pHeatSystemWatt: null,
-                    pOthersWatt:     null
+                    pOthersWatt:     null,
+                    batState:        null
                 };
                 for (const att of Object.getOwnPropertyNames(x)) {
                     let v: number | string | undefined = req.query[att];
@@ -80,13 +81,14 @@ export class Router {
                             case 'pPvEastWestWatt': v = '0'; break;
                             case 'pHeatSystemWatt': v = '0'; break;
                             case 'pOthersWatt':     v = '0'; break;
+                            case 'batState':        v = 'UNKNOWN'; break;
                             default: v = null;
                         }
                     }
                     (x as any)[att] = v;
                 }
                 const smv = new SmartModeValues(x);
-                ctrl.setSmartModeValues(smv);
+                ctrl.setSmartModeValues('router', smv);
             }
             const r = Monitor.getInstance().lastRecord;
             if (r) {

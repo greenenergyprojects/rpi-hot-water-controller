@@ -159,7 +159,7 @@ export class Monitor {
                 const ctrl = Controller.getInstance();
                 ctrl.setEnergyTotal(newest.energyTotal);
                 try {
-                    ctrl.setSmartModeValues(new SmartModeValues(newest.controllerStatus.smartModeValues));
+                    ctrl.setSmartModeValues('monitor', new SmartModeValues(newest.controllerStatus.smartModeValues));
                     ctrl.setSetpointPower(newest.controllerStatus.setpointPower);
                     ctrl.setParameter(newest.controllerStatus.parameter);
                 } catch (err) {

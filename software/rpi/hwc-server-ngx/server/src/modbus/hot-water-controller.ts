@@ -112,7 +112,7 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
     public async readCurrent4To20mA () {
         await this.readHoldRegister(2, 1);
         if (debug.finer.enabled) {
-            debug.finer('current = %s', sprintf('%.2f%s', this. _current4To20mA.value, this. _current4To20mA.unit));
+            debug.finer('current = %s', sprintf('%.2d%s', this. _current4To20mA.value, this. _current4To20mA.unit));
         }
     }
 
@@ -129,7 +129,8 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
     }
 
     public async writeActivePower (powerWatts: number) {
-        await this.writeCurrent4To20mA(this.powerWattsToCurrentMilliAmps(powerWatts));
+        const millis = this.powerWattsToCurrentMilliAmps(powerWatts);
+        await this.writeCurrent4To20mA(millis);
     }
 
     public get lastUpdateAt (): Date {
@@ -200,7 +201,7 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
         } else if (powerWatts >= HotWaterController.powerTable[20]) {
             return 20;
         } else {
-            for (let i = 6; i < 19; i++) {
+            for (let i = 6; i <= 19; i++) {
                 const p1 = HotWaterController.powerTable[i];
                 const p2 = HotWaterController.powerTable[i + 1];
                 if (powerWatts >= p1 && powerWatts <= p2) {
@@ -215,6 +216,17 @@ export class HotWaterController extends ModbusSerialDevice implements IHotWaterC
                 }
             }
             debug.warn('cannot calculate current from power value %f', powerWatts);
+            for (let i = 6; i <= 19; i++) {
+                const p1 = HotWaterController.powerTable[i];
+                const p2 = HotWaterController.powerTable[i + 1];
+                debug.info('---> i=%d, p1=%d p2=%d', i, p1, p2);
+                if (powerWatts >= p1 && powerWatts <= p2) {
+                    const k = p2 - p1;
+                    const d = p1 - k * i;
+                    const curr = Math.round((powerWatts - d) / k * 100) / 100;
+                    debug.info('--------> curr=%d', curr);
+                }
+            }
             return 0;
         }
     }
