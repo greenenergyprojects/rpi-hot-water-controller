@@ -351,7 +351,7 @@ export class Controller {
 
                     let dP = 0;
 
-                    if (eBatPct < 99) {
+                    if (batState !== 'FULL' && batState !== 'HOLDING') {
                         const batStatus = (pBat < 0 ? 'charge' : 'discharge');
                         const sPower = '(Pgrid=' + pGrid + 'W, Pbat=' + pBat + 'W ' + batStatus + ')';
 
@@ -387,33 +387,24 @@ export class Controller {
                             msgHeader += '(7.7): battery ok ' + sPower + ', no change for P';
                         }
 
-                    } else if (activePower > 0 || rv < 300) {
-                        if (pGrid > 200) {
-                            msgHeader += '(8.1): battery full, grid -> home (Pgrid=' + pGrid + 'W), decrease P (-200W)';
-                            dP = -200;
-
-                        } else if (pGrid > -10) {
-                            msgHeader += '(8.2): battery full, grid -> home (Pgrid=' + pGrid + 'W), decrease P';
-                            dP = -20;
-
-                        } else if (pGrid < -100) {
-                            msgHeader += '(8.3): battery full, grid <- home (Pgrid=' + pGrid + 'W), increase P';
-                            dP = 20;
-
-                        } else {
-                            msgHeader += '(8.4): battery full, grid  ~ home (Pgrid=' + pGrid + 'W), no change for P';
-                        }
-
                     } else {
-                        if (pGrid < -200) {
-                            msgHeader += ' (9.1): battery full, boiler full, grid ---> home (Pgrid=' + pGrid + 'W), set P';
-                            rv = -200;
-                        } else if (pBat > 200) {
-                            msgHeader += ' (9.2): battery full, boiler full, batt <--- home (Pbat=' + pBat + 'W), set P';
-                            rv = rv + 50;
+                        if (pGrid > 300) {
+                            msgHeader += '(8.1): decrease P (-50W)';
+                            dP = -50;
+                        } else if (pGrid > 100) {
+                            msgHeader += '(8.2): decrease P (-10W)';
+                            dP = -10;
+                        } else if (pGrid > 10) {
+                            msgHeader += '(8.3): decrease P (-5W)';
+                            dP = -5;
+                        } else if (pGrid < -10) {
+                            msgHeader += '(8.4): increase P (+5W)';
+                            dP = 5;
+                        } else if (pGrid < -100) {
+                            msgHeader += '(8.5): increase P (+10W)';
+                            dP = 10;
                         } else {
-                            msgHeader += '(9.3): battery full, boiler full, available power low (Pbat=' + pBat + 'W, Pgrid=' + pGrid + 'W), set P=300W';
-                            rv = Math.min(pGrid, 300);
+                            msgHeader += '(8.6): no change for P';
                         }
                     }
                     if (dP < 0 && dP > -1 ) { dP = -1; }
