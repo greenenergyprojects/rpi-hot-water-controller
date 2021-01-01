@@ -1,8 +1,8 @@
 
 import { DataRecord } from '../data-record';
 
-export type BatStateType = 'FULL' | 'CHARGING | DISCHARGING' | 'HOLDING' | 'UNKNOWN';
-export const batStateTypeValues = [ 'FULL', 'CHARGING', 'DISCHARGING', 'HOLDING', 'UNKNOWN' ];
+export type BatStateType = 'FULL' | 'CHARGING' | 'DISCHARGING' | 'HOLDING' | 'CALIBRATING' | 'UNKNOWN';
+export const batStateTypeValues = [ 'FULL', 'CHARGING', 'DISCHARGING', 'HOLDING', 'CALIBRATING', 'UNKNOWN' ];
 
 export interface ISmartModeValues {
     createdAt: Date | number | string;

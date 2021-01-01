@@ -351,62 +351,104 @@ export class Controller {
 
                     let dP = 0;
 
-                    if (batState !== 'FULL' && batState !== 'HOLDING') {
-                        const batStatus = (pBat < 0 ? 'charge' : 'discharge');
-                        const sPower = '(Pgrid=' + pGrid + 'W, Pbat=' + pBat + 'W ' + batStatus + ')';
+                    switch (batState) {
+                        case 'CHARGING': case 'DISCHARGING': {
+                            const batStatus = (pBat < 0 ? 'charge' : 'discharge');
+                            const sPower = '(Pgrid=' + pGrid + 'W, Pbat=' + pBat + 'W ' + batStatus + ')';
 
-                        if (pGrid > 200) {
-                            msgHeader += '(7.1): battery ok ' + sPower + ', decrease P (-20W)';
-                            dP = -20;
+                            if (pGrid > 200) {
+                                msgHeader += '(7.1): ' + sPower + ', decrease P (-20W)';
+                                dP = -20;
 
-                        } else if (pGrid > 100) {
-                            msgHeader += '(7.2): battery ok ' + sPower + ', decrease P (-5W)';
-                            dP = -5;
+                            } else if (pGrid > 100) {
+                                msgHeader += '(7.2): ' + sPower + ', decrease P (-5W)';
+                                dP = -5;
 
-                        } else if (pAvail > 200) {
-                            msgHeader += '(7.3): battery ok ' + sPower + ', increase P (+10W)';
-                            dP = 10;
+                            } else if (pAvail > 200) {
+                                msgHeader += '(7.3): ' + sPower + ', increase P (+10W)';
+                                dP = 10;
 
-                        } else if (pAvail < -200) {
-                            msgHeader += '(7.4): battery ok ' + sPower + ', decrease P (-100W)';
-                            dP = -100;
+                            } else if (pAvail < -200) {
+                                msgHeader += '(7.4): ' + sPower + ', decrease P (-100W)';
+                                dP = -100;
 
-                        } else if (pAvail > 30) {
-                            msgHeader += '(7.5): battery ok ' + sPower + ', increase P (+5W)';
-                            dP = 5;
+                            } else if (pAvail > 30) {
+                                msgHeader += '(7.5): ' + sPower + ', increase P (+5W)';
+                                dP = 5;
 
-                        } else if (pAvail < -30) {
-                            msgHeader += '(7.6): battery ok ' + sPower + ', decrease P (-25)';
-                            dP = -10;
+                            } else if (pAvail < -30) {
+                                msgHeader += '(7.6): ' + sPower + ', decrease P (-25)';
+                                dP = -10;
 
-                        } else if (pGrid > 10) {
-                            msgHeader += '(7.7): battery ok ' + sPower + ', decrease P (-5W)';
-                            dP = -5;
+                            } else if (pGrid > 10) {
+                                msgHeader += '(7.7): ' + sPower + ', decrease P (-5W)';
+                                dP = -5;
 
-                        } else {
-                            msgHeader += '(7.7): battery ok ' + sPower + ', no change for P';
+                            } else {
+                                msgHeader += '(7.8): ' + sPower + ', no change for P';
+                            }
+                            break;
                         }
 
-                    } else {
-                        if (pGrid > 300) {
-                            msgHeader += '(8.1): decrease P (-50W)';
-                            dP = -50;
-                        } else if (pGrid > 100) {
-                            msgHeader += '(8.2): decrease P (-10W)';
-                            dP = -10;
-                        } else if (pGrid > 10) {
-                            msgHeader += '(8.3): decrease P (-5W)';
-                            dP = -5;
-                        } else if (pGrid < -10) {
-                            msgHeader += '(8.4): increase P (+5W)';
-                            dP = 5;
-                        } else if (pGrid < -100) {
-                            msgHeader += '(8.5): increase P (+10W)';
-                            dP = 10;
-                        } else {
-                            msgHeader += '(8.6): no change for P';
+                        case 'FULL': {
+                            const batStatus = (pBat < 0 ? 'charge' : 'discharge');
+                            const sPower = '(Pgrid=' + pGrid + 'W, Pbat=' + pBat + 'W ' + batStatus + ')';
+                            if (pGrid > 300 || pBat > 300) {
+                                msgHeader += '(8.1): ' + sPower + ', decrease P (-50W)';
+                                dP = -50;
+                            } else if (pGrid > 100 || pBat > 100) {
+                                msgHeader += '(8.2): ' + sPower + ', decrease P (-25W)';
+                                dP = -25;
+                            } else if (pGrid > 20 || pBat > 20) {
+                                msgHeader += '(8.3): ' + sPower + ', decrease P (-5W)';
+                                dP = -5;
+                            } else if (pGrid < -20) {
+                                msgHeader += '(8.4): ' + sPower + ', increase P (+5W)';
+                                dP = 5;
+                            } else if (pGrid > -100) {
+                                msgHeader += '(8.5): ' + sPower + ', increase P (+25W)';
+                                dP = 25;
+                            } else if (pGrid < -300) {
+                                msgHeader += '(8.6): ' + sPower + ', increase P (+50W)';
+                                dP = 50;
+                            } else {
+                                msgHeader += '(8.7): ' + sPower + ', no change for P';
+                                dP = 0;
+                            }
+                            break;
+                        }
+
+                        case 'HOLDING': case 'CALIBRATING': {
+                            const batStatus = (pBat < 0 ? 'charge' : 'discharge');
+                            const sPower = '(Pgrid=' + pGrid + 'W, Pbat=' + pBat + 'W ' + batStatus + ')';
+                            if (pGrid > 300) {
+                                msgHeader += '(9.1): ' + sPower + ', decrease P (-50W)';
+                                dP = -50;
+                            } else if (pGrid > 100) {
+                                msgHeader += '(9.2): ' + sPower + ', decrease P (-10W)';
+                                dP = -10;
+                            } else if (pGrid > 10) {
+                                msgHeader += '(9.3): ' + sPower + ', decrease P (-5W)';
+                                dP = -5;
+                            } else if (pGrid < -10) {
+                                msgHeader += '(9.4): ' + sPower + ', increase P (+5W)';
+                                dP = 5;
+                            } else if (pGrid < -100) {
+                                msgHeader += '(9.5): ' + sPower + ', increase P (+10W)';
+                                dP = 10;
+                            } else {
+                                msgHeader += '(9.6): ' + sPower + ', no change for P';
+                            }
+                            break;
+                        }
+
+                        default: {
+                            msgHeader += '(10.1): unknown battery state, decrease P (-100W) ';
+                            dP = -100;
+                            break;
                         }
                     }
+
                     if (dP < 0 && dP > -1 ) { dP = -1; }
                     if (dP > 0 && dP <  1 ) { dP =  1; }
                     rv += dP;
