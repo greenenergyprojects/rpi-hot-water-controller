@@ -1,4 +1,4 @@
-export const VERSION = '0.8.3';
+export const VERSION = '0.8.4';
 
 import * as nconf from 'nconf';
 import * as fs from 'fs';

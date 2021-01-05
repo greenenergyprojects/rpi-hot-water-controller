@@ -214,6 +214,9 @@ export class Controller {
             };
         let msgHeader = '';
 
+// bug parameter minWats... not taken from client
+// debug.finer(JSON.stringify(this._parameter));
+
         if (!this._smartModeValues) {
              debug.warn('smartModeValues not availables');
         } else {
@@ -341,7 +344,7 @@ export class Controller {
                         }
                     }
 
-                } else if (eBatPct <= pSmart.minEBatPercent) {
+                } else if (eBatPct < pSmart.minEBatPercent) {
                     msgHeader += '(6.1): battery low (< ' + pSmart.minEBatPercent + '% (min) )';
                     rv  = 0;
 
@@ -356,7 +359,22 @@ export class Controller {
                             const batStatus = (pBat < 0 ? 'charge' : 'discharge');
                             const sPower = '(Pgrid=' + pGrid + 'W, Pbat=' + pBat + 'W ' + batStatus + ')';
 
-                            if (pGrid > 200) {
+                            msgHeader += ' ? ' + p.minWatts + ' ? ';
+                            if (p.smart && p.smart.minEBatPercent === 1) {
+                                const diff = -(pPvSouth + pBat);
+                                msgHeader += ' TEST ' + 'Ppvs=' + pPvSouth + 'W ,' + 'PBat=' + pBat + 'W ,' +  'diff=' + diff + 'W ';
+
+                                if (diff >= 0) {
+                                    dP = Math.round(diff / 20);
+                                    dP = Math.min(dP, 10);
+                                    msgHeader += '(99.1): ' + sPower + ', increase P (+' + dP + ')';
+                                } else {
+                                    dP = Math.round(-diff / 10);
+                                    dP = -Math.min(dP, 20);
+                                    msgHeader += '(99.2): ' + sPower + ', decrease P (' + dP + ')';
+                                }
+
+                            } else if (pGrid > 200) {
                                 msgHeader += '(7.1): ' + sPower + ', decrease P (-20W)';
                                 dP = -20;
 
