@@ -412,26 +412,32 @@ export class Controller {
                             const batStatus = (pBat < 0 ? 'charge' : 'discharge');
                             const sPower = '(Pgrid=' + pGrid + 'W, Pbat=' + pBat + 'W ' + batStatus + ')';
                             if (pGrid > 300 || pBat > 300) {
-                                msgHeader += '(8.1): ' + sPower + ', decrease P (-50W)';
                                 dP = -50;
+                                msgHeader += '(8.1): ' + sPower + ', decrease P (' + dP + 'W)';
                             } else if (pGrid > 100 || pBat > 100) {
-                                msgHeader += '(8.2): ' + sPower + ', decrease P (-25W)';
                                 dP = -25;
-                            } else if (pGrid > 20 || pBat > 20) {
-                                msgHeader += '(8.3): ' + sPower + ', decrease P (-5W)';
+                                msgHeader += '(8.2): ' + sPower + ', decrease P (' + dP + 'W)';
+                            } else if (pGrid > 0) {
                                 dP = -5;
-                            } else if (pGrid < -20) {
-                                msgHeader += '(8.4): ' + sPower + ', increase P (+5W)';
+                                msgHeader += '(8.3): ' + sPower + ', decrease P (' + dP + 'W)';
+                            } else if (pGrid > -20) {
+                                dP = -1;
+                                msgHeader += '(8.4): ' + sPower + ', decrease P (' + dP + 'W)';
+                            } else if (pGrid < -40) {
+                                dP = 1;
+                                msgHeader += '(8.5): ' + sPower + ', increase P (' + dP + 'W)';
+                            } else if (pGrid < -60) {
                                 dP = 5;
-                            } else if (pGrid > -100) {
-                                msgHeader += '(8.5): ' + sPower + ', increase P (+25W)';
+                                msgHeader += '(8.6): ' + sPower + ', increase P (' + dP + 'W)';
+                            } else if (pGrid < -100) {
                                 dP = 25;
+                                msgHeader += '(8.7): ' + sPower + ', increase P (' + dP + 'W)';
                             } else if (pGrid < -300) {
-                                msgHeader += '(8.6): ' + sPower + ', increase P (+50W)';
                                 dP = 50;
+                                msgHeader += '(8.8): ' + sPower + ', increase P (' + dP + 'W)';
                             } else {
-                                msgHeader += '(8.7): ' + sPower + ', no change for P';
                                 dP = 0;
+                                msgHeader += '(8.9): ' + sPower + ', no change for P';
                             }
                             break;
                         }
